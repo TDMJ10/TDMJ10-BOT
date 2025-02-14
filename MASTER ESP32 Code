@@ -1,0 +1,309 @@
+// 
+
+
+// ==============================
+// Global Variables
+// ==============================
+
+
+
+// ==============================
+// Pre Setup
+// ==============================
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <ESP32Servo.h>
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncTCP.h>
+
+//Servo
+Servo ARM1;
+
+//OLED
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET     -1
+#define SCREEN_ADDRESS 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+//WiFi
+const char* ssid = "INPC";  
+const char* password = "12345678";
+int connectedDevices = 0;
+AsyncWebServer server(80);
+
+
+// ==============================
+// Pins
+// ==============================
+
+//Servo
+const int ARM1_PIN = 15;
+
+//Wheels
+const int FRONT_LEFT_FORWARD_PIN = ;
+const int FRONT_RIGHT_FORWARD_PIN = ;
+
+const int FRONT_LEFT_REVERSE_PIN = ;
+const int FRONT_RIGHT_REVERSE_PIN = ;
+
+
+const int REAR_LEFT_FORWARD_PIN = ;
+const int REAR_RIGHT_FORWARD_PIN = ;
+
+const int REAR_LEFT_REVERSE_PIN = ;
+const int REAR_RIGHT_REVERSE_PIN = ;
+
+//Master ESP Troubleshooting LED
+const int LED_PIN = 2;
+
+
+
+
+// ==============================
+// Movement Functions 
+// ==============================
+
+void rotate_left (int value) { // Scuffed Method Since we're not using a gyro - in degrees
+  const unsigned long duration = value*10; // Value multiplier here needs to be calibrated when prototype is made
+  static unsigned long start = 0;
+  static bool rotating = false;
+
+  if (!rotating) {
+    start = millis(); 
+    rotating = true;`
+  } 
+
+  while(rotating) {
+    if (millis() - start < duration) {
+    digitalWrite(FRONT_RIGHT_FORWARD_PIN, HIGH);
+    digitalWrite(REAR_LEFT_FORWARD_PIN, HIGH);
+    digitalWrite(FRONT_LEFT_REVERSE_PIN, HIGH);
+    digitalWrite(REAR_RIGHT_REVERSE_PIN, HIGH);
+  } else {
+    digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
+    digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
+    digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
+    digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
+    rotating = false;
+    } 
+  }
+}
+
+void rotate_right (int value) { // Scuffed Method Since we're not using a gyro - in degrees
+  const unsigned long duration = value*10; // Value multiplier here needs to be calibrated when prototype is made
+  static unsigned long start = 0;
+  static bool rotating = false;
+
+  if (!rotating) {
+    start = millis(); 
+    rotating = true;`
+  } 
+  
+  while(rotating) {
+    if (millis() - start < duration) {
+    digitalWrite(FRONT_LEFT_FORWARD_PIN, HIGH);
+    digitalWrite(REAR_RIGHT_FORWARD_PIN, HIGH);
+    digitalWrite(FRONT_RIGHT_REVERSE_PIN, HIGH);
+    digitalWrite(REAR_LEFT_REVERSE_PIN, HIGH);
+  } else {
+    digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
+    digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
+    digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
+    digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
+    rotating = false;
+    } 
+  }
+  
+}
+
+void shake(int intensity, int number_of_times) {
+  for(int count=0;count<number_of_times;count++) {
+    rotate_left(intensity);
+    rotate_right(intensity);
+  }
+}
+
+void arms(int degrees) {
+  ARM1.write(degrees);
+}
+
+void arms_reset() {
+  ARM1.write(0);
+}
+
+void arms_shake(int degrees, int number_of_times) {
+  for(int count=0;count<number_of_times;count++) {
+    arms_reset();
+    delay(1000)
+    arms.write(degrees);
+  }
+}
+
+// ==============================
+// Faces
+// ==============================
+
+void Happy_FACE() {
+
+}
+
+void Awkward_FACE() {
+  
+}
+
+void Idle_FACE() {
+
+}
+
+
+
+// ==============================
+// Behaviours
+// ==============================
+
+int check_surroundings() {
+  int known = 0;
+  int unknown = 0;
+  for (int degrees=0; degrees<360; degrees+=45) {
+    rotate(45);
+    
+
+    // Insert Scanning Code here
+    // Most of the code written here is made for a maximum of 9 known and 9 unknown
+    //(theres probably a better way to do this but i'm too lazy atm)
+
+    
+  }
+  return (known*10+unknown);
+}
+
+void playful() {
+  Happy_FACE();
+
+}
+
+void nervous() {
+  Awkward_FACE();
+  
+}
+
+void nervous_alone() {
+  Awkward_FACE();
+}
+
+void alone() {
+  Idle_FACE();
+}
+
+// ==============================
+// Play Functions
+// ==============================
+
+void rock_paper_scissors() {
+
+}
+
+
+
+
+
+// ==============================
+// Other
+// ==============================
+
+void handleDeviceConnection() {
+  if (connectedDevices == 1) {
+    // Turn on LED if one device is connected
+    digitalWrite(ledPin, HIGH);
+  } else if (connectedDevices == 2) {
+    // Blink LED if two devices are connected
+    while (connectedDevices == 2) {
+      digitalWrite(ledPin, HIGH);
+      delay(500);
+      digitalWrite(ledPin, LOW);
+      delay(500);
+    }
+  } else {
+    // Turn off LED if no devices are connected
+    digitalWrite(ledPin, LOW);
+  }
+}
+
+// ==============================
+// Setup & Loop
+// ==============================
+
+void setup() {
+
+  Serial.begin(115200);
+
+  ARM1.attach(ARM1_PIN);
+  pinMode(FRONT_LEFT_FORWARD_PIN, OUTPUT);
+  pinMode(FRONT_RIGHT_FORWARD_PIN, OUTPUT);
+  pinMode(FRONT_LEFT_REVERSE_PIN, OUTPUT);
+  pinMode(FRONT_RIGHT_REVERSE_PIN, OUTPUT);
+  pinMode(REAR_LEFT_FORWARD_PIN, OUTPUT);
+  pinMode(REAR_RIGHT_FORWARD_PIN, OUTPUT);
+  pinMode(REAR_LEFT_REVERSE_PIN, OUTPUT);
+  pinMode(REAR_RIGHT_REVERSE_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+
+  // Start AsyncWebServer
+  server.on("/connect", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "Device Connected");
+    connectedDevices++;
+    handleDeviceConnection();
+  });
+
+  server.on("/disconnect", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "Device Disconnected");
+    if (connectedDevices > 0) {
+      connectedDevices--;
+    }
+    handleDeviceConnection();
+  });
+
+  server.begin();
+}
+
+void loop() {
+  
+  int people = check_surroundings();
+  
+  int known = people/10;
+  int unknown = people%10;
+  Serial.println("Known: "+String(known)+" Unknown:  "+String(unknown));
+
+  if (people!=0) {
+    
+    if (known>0 && unknown>0) {
+      Serial.println("Bot sees people it knows and doesn't know");
+      nervous();
+    }
+
+    if (known>0 && unknown==0) {
+      Serial.println("Bot Knows Everyone!");
+      playful();
+    }
+
+    if (known==0 && unknown>0) {
+      Serial.println("Bot doesn't know anyone");
+      nervous_alone();
+    }
+  else {
+    Serial.println("Bot is Alone");
+    alone();
+  }
+  delay(10000);
+}
