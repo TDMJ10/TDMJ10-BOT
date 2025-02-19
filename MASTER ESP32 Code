@@ -27,7 +27,7 @@ Servo ARM1;
 #define SCREEN_HEIGHT 64
 #define OLED_RESET     -1
 #define SCREEN_ADDRESS 0x3C
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //WiFi
 const char* ssid = "INPC";  
@@ -60,6 +60,11 @@ const int REAR_RIGHT_REVERSE_PIN = ;
 //Master ESP Troubleshooting LED
 const int LED_PIN = 2;
 
+
+
+// ==============================
+// Convinience Functions
+// ==============================
 
 
 
@@ -146,19 +151,52 @@ void arms_shake(int degrees, int number_of_times) {
 // ==============================
 // Faces
 // ==============================
-
-void Happy_FACE() {
+void Blink_FACE() {
+  oled.clearDisplay();
+  oled.fillRoundRect(29, 28, 34, 15, 45, WHITE);
+  oled.fillRoundRect(65, 28, 34, 15, 45, WHITE);
+  delay(100);
+}
+void Neutral_FACE() {
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  delay(2500);
+  Blink_FACE();
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  delay(2500);
+  Blink_FACE();
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  
 
 }
 
-void Awkward_FACE() {
+void Happy_FACE() {
+  oled.clearDisplay();
+  oled.fillRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRect(74, 18, 18, 32, 45, WHITE);
   
 }
 
-void Idle_FACE() {
+void Awkward_FACE() {
+  oled.clearDisplay();
 
 }
 
+void Idle_FACE() {
+  oled.clearDisplay();
+  oled.drawRect(43, 18, 18, 32, WHITE);
+  oled.drawRect(78, 18, 18, 32, WHITE);
+}
+
+void Angry_FACE() {
+  oled.clearDisplay();
+
+}
 
 
 // ==============================
