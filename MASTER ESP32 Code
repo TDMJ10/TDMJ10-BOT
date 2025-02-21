@@ -44,6 +44,8 @@ AsyncWebServer server(80);
 const int ARM1_PIN = 15;
 
 //Wheels
+//FRONT: A IS RIGHT B IS LEFT
+//REAR: A IS RIGHT B IS LEFT
 const int FRONT_LEFT_FORWARD_PIN = ;
 const int FRONT_RIGHT_FORWARD_PIN = ;
 
@@ -71,6 +73,58 @@ const int LED_PIN = 2;
 // ==============================
 // Movement Functions 
 // ==============================
+
+void go_forward(int value) {
+  const unsigned long duration = value*10; // Value multiplier here needs to be calibrated when prototype is made
+  static unsigned long start = 0;
+  static bool moving = false;
+
+  if (!moving) {
+    start = millis(); 
+    moving = true;`
+  } 
+  
+  while(moving) {
+    if (millis() - start < duration) {
+    digitalWrite(FRONT_RIGHT_FORWARD_PIN, HIGH);
+    digitalWrite(REAR_LEFT_FORWARD_PIN, HIGH);
+    digitalWrite(FRONT_LEFT_FORWARD_PIN, HIGH);
+    digitalWrite(REAR_RIGHT_FORWARD_PIN, HIGH);
+  } else {
+    digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
+    digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
+    digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
+    digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
+    moving = false;
+    } 
+  }
+}
+
+void go_back(int value) {
+  const unsigned long duration = value*10; // Value multiplier here needs to be calibrated when prototype is made
+  static unsigned long start = 0;
+  static bool moving = false;
+
+  if (!moving) {
+    start = millis(); 
+    moving = true;`
+  } 
+  
+  while(moving) {
+    if (millis() - start < duration) {
+    digitalWrite(FRONT_RIGHT_REVERSE_PIN, HIGH);
+    digitalWrite(REAR_LEFT_REVERSE_PIN, HIGH);
+    digitalWrite(FRONT_LEFT_REVERSE_PIN, HIGH);
+    digitalWrite(REAR_RIGHT_REVERSE_PIN, HIGH);
+  } else {
+    digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
+    digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
+    digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
+    digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
+    moving = false;
+    } 
+  }
+}
 
 void rotate_left (int value) { // Scuffed Method Since we're not using a gyro - in degrees
   const unsigned long duration = value*10; // Value multiplier here needs to be calibrated when prototype is made
@@ -155,49 +209,116 @@ void Blink_FACE() {
   oled.clearDisplay();
   oled.fillRoundRect(29, 28, 34, 15, 45, WHITE);
   oled.fillRoundRect(65, 28, 34, 15, 45, WHITE);
+  oled.display();
   delay(100);
 }
 void Neutral_FACE() {
   oled.clearDisplay();
   oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
   delay(2500);
   Blink_FACE();
   oled.clearDisplay();
   oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
   delay(2500);
   Blink_FACE();
   oled.clearDisplay();
   oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
-  
-
+  oled.display();
 }
 
 void Happy_FACE() {
   oled.clearDisplay();
-  oled.fillRect(38, 18, 18, 32, 45, WHITE);
-  oled.fillRect(74, 18, 18, 32, 45, WHITE);
-  
-}
-
-void Awkward_FACE() {
+  oled.fillRoundRect(29, 21, 34, 15, 45, WHITE);
+  oled.fillRoundRect(65, 21, 34, 15, 45, WHITE);
+  oled.fillRoundRect(32, 24, 29, 15, 45, BLACK);
+  oled.fillRoundRect(68, 24, 29, 15, 45, BLACK);
+  oled.display();
+  delay(350);
   oled.clearDisplay();
-
+  oled.fillRoundRect(29, 23, 34, 15, 45, WHITE);
+  oled.fillRoundRect(65, 23, 34, 15, 45, WHITE);
+  oled.fillRoundRect(31, 26, 29, 15, 45, BLACK);
+  oled.fillRoundRect(67, 26, 29, 15, 45, BLACK);
+  oled.display();
+  delay(350);
 }
 
 void Idle_FACE() {
   oled.clearDisplay();
   oled.drawRect(43, 18, 18, 32, WHITE);
   oled.drawRect(78, 18, 18, 32, WHITE);
+  oled.display();
 }
 
 void Angry_FACE() {
   oled.clearDisplay();
-
+  oled.fillRoundRect(29, 18, 34, 15, 45, WHITE);
+  oled.fillRoundRect(65, 18, 34, 15, 45, WHITE);
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+  delay(1000);
 }
 
+void Look_Around_FACE() {
+  //Left
+  oled.clearDisplay();
+  oled.fillRoundRect(28, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(64, 18, 18, 32, 45, WHITE);
+  oled.display();
+  delay(1500);
+  //Center
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+  //Blink
+  oled.clearDisplay();
+  oled.fillRoundRect(29, 28, 34, 15, 45, WHITE);
+  oled.fillRoundRect(65, 28, 34, 15, 45, WHITE);
+  oled.display();
+  delay(100);
+  //Center
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+  delay(1750);
+  //Blink
+  oled.clearDisplay();
+  oled.fillRoundRect(29, 28, 34, 15, 45, WHITE);
+  oled.fillRoundRect(65, 28, 34, 15, 45, WHITE);
+  oled.display();
+  delay(100);
+  //Center
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+  //Right
+  oled.clearDisplay();
+  oled.fillRoundRect(48, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(84, 18, 18, 32, 45, WHITE);
+  oled.display();
+  delay(1500);
+  //Center
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+}
+
+void BOOTING() {
+  oled.clearDisplay();
+  oled.drawRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.drawRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+}
 
 // ==============================
 // Behaviours
@@ -237,6 +358,7 @@ void alone() {
   Idle_FACE();
 }
 
+
 // ==============================
 // Play Functions
 // ==============================
@@ -256,18 +378,18 @@ void rock_paper_scissors() {
 void handleDeviceConnection() {
   if (connectedDevices == 1) {
     // Turn on LED if one device is connected
-    digitalWrite(ledPin, HIGH);
+    digitalWrite(LED_PIN, HIGH);
   } else if (connectedDevices == 2) {
     // Blink LED if two devices are connected
     while (connectedDevices == 2) {
-      digitalWrite(ledPin, HIGH);
+      digitalWrite(LED_PIN, HIGH);
       delay(500);
-      digitalWrite(ledPin, LOW);
+      digitalWrite(LED_PIN, LOW);
       delay(500);
     }
   } else {
     // Turn off LED if no devices are connected
-    digitalWrite(ledPin, LOW);
+    digitalWrite(LED_PIN, LOW);
   }
 }
 
@@ -276,10 +398,11 @@ void handleDeviceConnection() {
 // ==============================
 
 void setup() {
-
+  // Serial
   Serial.begin(115200);
-
+  // Servo
   ARM1.attach(ARM1_PIN);
+  // Motor Outputs
   pinMode(FRONT_LEFT_FORWARD_PIN, OUTPUT);
   pinMode(FRONT_RIGHT_FORWARD_PIN, OUTPUT);
   pinMode(FRONT_LEFT_REVERSE_PIN, OUTPUT);
@@ -290,6 +413,17 @@ void setup() {
   pinMode(REAR_RIGHT_REVERSE_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
 
+  // OLED 
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("failed to start SSD1306 OLED"));
+    while (1);
+  }
+
+  delay(2000);
+  oled.setCursor(0, 0);
+  oled.clearDisplay();
+
+  // WiFi AP
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -313,6 +447,19 @@ void setup() {
   });
 
   server.begin();
+
+  String ipAddress = WiFi.localIP().toString();
+  Serial.println("IP Address: " + ipAddress);
+  oled.setCursor(0, 0);
+  oled.clearDisplay();
+  oled.setTextSize(1);
+  oled.print("IP Address: ");
+  oled.setCursor(0, 10);
+  oled.print(ipAddress);
+  oled.display();
+  delay(15000);
+  oled.clearDisplay();
+  BOOTING();
 }
 
 void loop() {
