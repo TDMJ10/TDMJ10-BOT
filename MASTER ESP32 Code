@@ -86,7 +86,7 @@ void Tell_Shout(String Shout) {
     else {
       pinMode(LED_PIN, HIGH);
       while(true) {
-      Serial.println("TELL SHOUT ERROR LOCK. RECIEVED COMMAND: " + Shout);
+        Serial.println("TELL SHOUT ERROR LOCK. RECIEVED COMMAND: " + Shout);
       }
     }
   }
@@ -370,7 +370,7 @@ void Listen() {
       }
       else {
         if (command == "Manual_ON") {
-        Movement_Listen();
+          Movement_Listen();
         }
         else {
           if (command == "RPS") {
@@ -424,6 +424,14 @@ void Movement_Listen() {
       }
     }
   }
+  digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
+  digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
+  digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
+  digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
+  digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
+  digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
+  digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
+  digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW)
 }
 
 int RPS_Listen() {
@@ -437,7 +445,7 @@ int RPS_Listen() {
       return 2;
     }
     else {
-      if (command = "SCISSORS") {
+      if (command == "SCISSORS") {
         return 3;
       }
       else {
@@ -476,7 +484,7 @@ void Lose() {
 // ==============================
 
 void rock_paper_scissors() {
-  int BOT_PICK = random(1, 3);
+  int BOT_PICK = random(1, 4);
   int PLAYER_PICK = RPS_Listen();
 
   if(BOT_PICK==PLAYER_PICK) {
