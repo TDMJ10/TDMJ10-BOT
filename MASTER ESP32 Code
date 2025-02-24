@@ -1,16 +1,23 @@
-// Signed Naim Iftekhar Rahman (TDMJ10)
-// tdmj10@gmail.com
-// naimiftekharrahman@gmail.com
-// Student of Bangldesh BRAC University 24201190
-// ROBU FALL 2024 BOR PROJECT
-// TEAM I-NPC
+/*
+  Signed Naim Iftekhar Rahman (TDMJ10)
+  tdmj10@gmail.com
+  naimiftekharrahman@gmail.com
+  Student of Bangldesh BRAC University 24201190
+  ROBU FALL 2024 BOR PROJECT
+  TEAM I-NPC
 
 
-// May This Code Help Others In The Future
+  May This Code Inspire Others In The Future
 
-// To do:
+        CAUTION:
+       ---------
+        THIS CODE CAN CAUSE WINDOWS BLUE SCREENS OF DEATH (IQRL_NOT_LESS_OR_EQUAL)
+        DUE TO EXCESSIVE SERIAL PRINTS. BE FORWARNED
 
-/* 
+        THIS CODE IS UNTESTED ON MAC OS IT MAY CAUSE KERNEL PANICS
+
+ To do:
+
 1: Fix Motor Pins When Installed Into Body
 2: Write Be_Self();
 3: Write Tell_Shout(); Communication System to Slave ESP32
@@ -72,7 +79,7 @@ const int ARM1_PIN = 15;
 
 // Wheels
 // FRONT (WHITE): A IS RIGHT B IS LEFT
-
+ 
 const int FRONT_LEFT_FORWARD_PIN = 33;
 const int FRONT_RIGHT_FORWARD_PIN = 26;
 
@@ -87,7 +94,7 @@ const int REAR_LEFT_REVERSE_PIN = 27;
 const int REAR_RIGHT_REVERSE_PIN = 12;
 
 // Master ESP Troubleshooting LED
-const int LED_PIN = 2;
+int LED_PIN = 2;
 
 
 
@@ -462,6 +469,7 @@ void Movement_Listen() {
   MOVING = true;
   Serial.println("MASTER> Entered Manual Mode");
   while(MOVING) {
+    delay(100);
     Tell_Shout("MOVEMENT");
     
       if(MOVEMENT_COMMAND == "Manual_OFF") {
@@ -492,7 +500,7 @@ void Movement_Listen() {
               MOVEMENT_COMMAND = "VOID";
               }
               else {
-                if(MOVEMENT_COMMAND == "VOID") {
+                if(MOVEMENT_COMMAND == "VOID" || MOVEMENT_COMMAND == "") {
                   Serial.println("MASTER> MOVEMENT_LISTEN> NO COMMAND");
                 }
                 else {
@@ -519,6 +527,7 @@ void Movement_Listen() {
 int RPS_Listen() {
   Serial.println("MASTER> RPS LISTENING");
   while(RPSING) {
+    delay(100);
     Tell_Shout("RPS");
     if (RPS_COMMAND == "ROCK") {
       RPS_COMMAND = "VOID";
