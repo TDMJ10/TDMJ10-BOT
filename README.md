@@ -2,13 +2,13 @@
 
 # Made with love (and pain) by
 
-Al Faridul Karim - Software & Hardware
+Al Faridul Karim - CAMERA MODEL TRAINING & SLAVE ESP32 CODE
 
-Naim Iftekhar Rahman - Software & Hardware
+Naim Iftekhar Rahman - MASTER SLAVE COMMUNICATION, MASTER ESP32 CODE, CAMERA MODEL TRANING & TESTING
 
-Muskan Agarwal - Marketting & Pitch
+Muskan Agarwal - MARKETTING & CAMERA MODEL TRAINING
 
-Muntasir Mubeen - Hardware & Mechanics
+Muntasir Mubeen - BOT BODY MODELLING, MECHANICS & CAMERA MODEL TRAINING
 
   -- Team I-NPC
 
@@ -19,9 +19,9 @@ BRAC University ROBU BOR PROJECT FALL 2024
 
 # Hardware Components:
 
-1 ESP32 CH340C
+1 ESP32 WROOM32 30P CH340C DEV BOARD USB-C
 
-1 ESP32 CAM AI Thinker
+1 ESP32S CAM AI Thinker
 
 1 ESP32 30P Expansion Board
 
