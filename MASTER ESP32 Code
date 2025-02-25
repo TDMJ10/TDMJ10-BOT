@@ -17,13 +17,14 @@
         THIS CODE IS UNTESTED ON MAC OS IT MAY CAUSE KERNEL PANICS
 
  To do:
-
+==========
 1: Fix Motor Pins When Installed Into Body
 2: Write Be_Self();
 3: Write Tell_Shout(); Communication System to Slave ESP32
 4: Write alone();
 5: Finish rock paper scissors + faces
 6. Finish Remaining Behaviours (+ Win and Lose)
+7. Add Servo Movements to most functions
 
 */
 
@@ -324,6 +325,12 @@ void arms_shake(int degrees, int number_of_times) {
 // Faces
 // ==============================
 
+void DEFAULT_FACE() {
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+}
 void Blink_FACE() {
   oled.clearDisplay();
   oled.fillRoundRect(29, 28, 34, 15, 45, WHITE);
@@ -432,16 +439,37 @@ void Look_Around_FACE() {
   oled.display();
 }
 
-void ROCK_FACE() {
+void RPS_FACE() {
+  oled.clearDisplay();
+  ROCK_FACE();
+  delay(500);
+  PAPER_FACE();
+  delay(500);
+  SCISSORS_FACE();
+  delay(500);
+  ROCK_FACE();
+  delay(500);
+  PAPER_FACE();
+  delay(500);
+  SCISSORS_FACE();
+  delay(500);
+  DEFAULT_FACE();
+}
 
+void ROCK_FACE() {
+  oled.clearDisplay();
+  oled.drawCircle();
 }
 
 void PAPER_FACE() {
-
+  oled.clearDisplay();
+  oled.drawRect();
 }
 
 void SCISSORS_FACE() {
-
+  oled.clearDisplay();
+  oled.drawLine();
+  oled.drawLine();
 }
 
 void BOOTING() {
@@ -472,46 +500,46 @@ void Movement_Listen() {
     delay(100);
     Tell_Shout("MOVEMENT");
     
-      if(MOVEMENT_COMMAND == "Manual_OFF") {
-        MOVING = false;
-      }
-      else {
-        if (MOVEMENT_COMMAND == "FORWARD") {
+    if(MOVEMENT_COMMAND == "Manual_OFF") {
+      MOVING = false;
+    }
+    else {
+      if (MOVEMENT_COMMAND == "FORWARD") {
         Serial.println("MASTER> Motion: Going Forward");
         go_forward(0.25);
         MOVEMENT_COMMAND = "VOID";
-        }
-        else {
-          if (MOVEMENT_COMMAND == "REVERSE") {
+      }
+      else {
+        if (MOVEMENT_COMMAND == "REVERSE") {
           Serial.println("MASTER> Motion: Going Back");
           go_back(0.25);
           MOVEMENT_COMMAND = "VOID";
-          }
-          else {
-            if (MOVEMENT_COMMAND == "LEFT") {
+        }
+        else {
+          if (MOVEMENT_COMMAND == "LEFT") {
             Serial.println("MASTER> Motion: Turning Left");
             rotate_left(45);
             MOVEMENT_COMMAND = "VOID";
-            }
-            else {
-              if (MOVEMENT_COMMAND == "RIGHT") {
+          }
+          else {
+            if (MOVEMENT_COMMAND == "RIGHT") {
               Serial.println("MASTER> Motion: Turning Right");
               rotate_right(45);
               MOVEMENT_COMMAND = "VOID";
+            }
+            else {
+              if(MOVEMENT_COMMAND == "VOID" || MOVEMENT_COMMAND == "") {
+                  Serial.println("MASTER> MOVEMENT_LISTEN> NO COMMAND");
               }
               else {
-                if(MOVEMENT_COMMAND == "VOID" || MOVEMENT_COMMAND == "") {
-                  Serial.println("MASTER> MOVEMENT_LISTEN> NO COMMAND");
-                }
-                else {
-                  Serial.println("MASTER> Movement_Listen: UNRECOGNIZED COMMAND: " + MOVEMENT_COMMAND);
-                  Error();
-                }
+                Serial.println("MASTER> Movement_Listen: UNRECOGNIZED COMMAND: " + MOVEMENT_COMMAND);
+                Error();
               }
             }
-          }
+          } 
         }
       }
+    }
   }
   digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
   digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
@@ -635,7 +663,7 @@ void rock_paper_scissors() {
   RPSING = true;
 
   while(RPSING) {
-    delay(3000);
+    RPS_FACE();
     arms(90);
     delay(350);
     arms(45);
@@ -651,7 +679,7 @@ void rock_paper_scissors() {
 
     if(BOT_PICK == PLAYER_PICK) {
       Angry_FACE();
-      delay(3000);
+      delay(2000);
     }
     else {
       if(BOT_PICK == 1 && PLAYER_PICK == 3) { // BOT ROCK, PLAYER SCISSORS
