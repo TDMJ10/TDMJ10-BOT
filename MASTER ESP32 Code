@@ -24,8 +24,7 @@
 4: Write alone();
 5: Finish rock paper scissors + faces
 6. Finish Remaining Behaviours (+ Win and Lose)
-7. Add Servo Movements to most functions
-
+7. Add servo movement to most actions
 */
 
 
@@ -107,9 +106,9 @@ int LED_PIN = 2;
 void STARTUP() {
   for(int count=0; count<15; count++) {
     pinMode(LED_PIN, HIGH);
-    delay(100);
+    delay(250);
     pinMode(LED_PIN, LOW);
-    delay(100);
+    delay(250);
   }
   Serial.println("READY");
 }
@@ -331,6 +330,7 @@ void DEFAULT_FACE() {
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
   oled.display();
 }
+
 void Blink_FACE() {
   oled.clearDisplay();
   oled.fillRoundRect(29, 28, 34, 15, 45, WHITE);
@@ -459,17 +459,20 @@ void RPS_FACE() {
 void ROCK_FACE() {
   oled.clearDisplay();
   oled.drawCircle();
+  oled.Display();
 }
 
 void PAPER_FACE() {
   oled.clearDisplay();
   oled.drawRect();
+  oled.Display();
 }
 
 void SCISSORS_FACE() {
   oled.clearDisplay();
   oled.drawLine();
   oled.drawLine();
+  oled.Display();
 }
 
 void BOOTING() {
@@ -497,11 +500,13 @@ void Movement_Listen() {
   MOVING = true;
   Serial.println("MASTER> Entered Manual Mode");
   while(MOVING) {
-    delay(100);
+    delay(1000);
     Tell_Shout("MOVEMENT");
     
     if(MOVEMENT_COMMAND == "Manual_OFF") {
       MOVING = false;
+      MOVEMENT_COMMAND == "VOID";
+      break;
     }
     else {
       if (MOVEMENT_COMMAND == "FORWARD") {
@@ -555,7 +560,7 @@ void Movement_Listen() {
 int RPS_Listen() {
   Serial.println("MASTER> RPS LISTENING");
   while(RPSING) {
-    delay(100);
+    delay(1000);
     Tell_Shout("RPS");
     if (RPS_COMMAND == "ROCK") {
       RPS_COMMAND = "VOID";
@@ -590,7 +595,6 @@ int RPS_Listen() {
 
 void playful() {
   Happy_FACE();
-  Listen();
 }
 
 
@@ -663,7 +667,7 @@ void rock_paper_scissors() {
   RPSING = true;
 
   while(RPSING) {
-    RPS_FACE();
+    delay(3000);
     arms(90);
     delay(350);
     arms(45);
@@ -679,7 +683,7 @@ void rock_paper_scissors() {
 
     if(BOT_PICK == PLAYER_PICK) {
       Angry_FACE();
-      delay(2000);
+      delay(3000);
     }
     else {
       if(BOT_PICK == 1 && PLAYER_PICK == 3) { // BOT ROCK, PLAYER SCISSORS
