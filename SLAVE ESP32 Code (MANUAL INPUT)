@@ -1,4 +1,5 @@
 // This Code is meant for testing communication this code does not have any automated inputs or outputs
+// CHANGE THE MAC ADDRESSES TO YOUR ESP's MAC ADDRESS
 
 #include <esp_now.h>
 #include <WiFi.h>
