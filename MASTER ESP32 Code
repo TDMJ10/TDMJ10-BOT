@@ -22,12 +22,7 @@
  To do:
 ==========
 1: Fix Motor Pins When Installed Into Body
-2: Write Be_Self();
-3: Write Tell_Shout(); Communication System to Slave ESP32
-4: Write alone();
-5: Finish rock paper scissors + faces
-6. Finish Remaining Behaviours (+ Win and Lose)
-7. Add servo movement to most actions
+5: Finish rock paper scissors faces
 */
 
 
@@ -59,9 +54,9 @@ bool LISTENING = false;
 // SEARCHING
 bool TURNING_AROUND = false;
 
-// STARTUP TROUBLESHOOTING
+// TROUBLESHOOTING
 bool STARTUP_CHECK_COMPLETE = false;
-
+int LOG_NO = 1;
 
 // ==============================
 // Pre Setup
@@ -128,8 +123,7 @@ void STARTUP() {
   delay(250);
   digitalWrite(LED_PIN, LOW);
   delay(250);
-  Serial.println("MASTER> READY TO COMMUNICATE");
-  DEFAULT_FACE();
+  Serial.println(String(LOG_NO++) + "| MASTER> READY TO COMMUNICATE");
   delay(10);
 }
 
@@ -139,7 +133,7 @@ void STARTUP() {
 // ==============================
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "MASTER> SENT SLAVE: " + PREVIOUS_COMMAND : "MASTER> FAILED TO COMMUNICATE WITH SLAVE");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? String(LOG_NO++) + "| MASTER> SENT SLAVE: " + PREVIOUS_COMMAND : String(LOG_NO++) + "| MASTER> FAILED TO COMMUNICATE WITH SLAVE");
   delay(10);
 }
 
@@ -149,23 +143,23 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
     if(!TURNING_AROUND) {
       if (MOVING) {
         MOVEMENT_COMMAND = COMMAND;
-        Serial.print("SLAVE> MOVING> ");
+        Serial.print(String(LOG_NO++) + "| SLAVE> MOVING> ");
         Serial.println(COMMAND);
       }
       else {
         if (RPSING) {
           RPS_COMMAND = COMMAND;
-          Serial.print("SLAVE> RPSING> ");
+          Serial.print(String(LOG_NO++) + "| SLAVE> RPSING> ");
           Serial.println(COMMAND);
         }
         else {
           if (LISTENING) {
             LISTEN_COMMAND = COMMAND;
-            Serial.print("SLAVE> LISTENING> ");
+            Serial.print(String(LOG_NO++) + "| SLAVE> LISTENING> ");
             Serial.println(COMMAND);
           }
           else {
-            Serial.println("ERROR: NOT MOVEMENT, RPSING OR LISTENING");
+            Serial.println(String(LOG_NO++) + "| MASTER> ERROR: NOT MOVEMENT, RPSING OR LISTENING");
           } 
         }
       }
@@ -174,23 +168,23 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
       ERROR_INVERSE();
       if (MOVING) {
         MOVEMENT_COMMAND = COMMAND;
-        Serial.print("SLAVE> MOVING> ");
+        Serial.print(String(LOG_NO++) + "| SLAVE> MOVING> ");
         Serial.println(COMMAND);
       }
       else {
         if (RPSING) {
           RPS_COMMAND = COMMAND;
-          Serial.print("SLAVE> RPSING> ");
+          Serial.print(String(LOG_NO++) + "| SLAVE> RPSING> ");
           Serial.println(COMMAND);
         }
         else {
           if (LISTENING) {
             LISTEN_COMMAND = COMMAND;
-            Serial.print("SLAVE> LISTENING> ");
+            Serial.print(String(LOG_NO++) + "| SLAVE> LISTENING> ");
             Serial.println(COMMAND);
           }
           else {
-            Serial.println("ERROR: NOT MOVEMENT, RPSING OR LISTENING");
+            Serial.println(String(LOG_NO++) + "| MASTER> ERROR: NOT MOVEMENT, RPSING OR LISTENING");
           } 
         }
       }
@@ -198,12 +192,11 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
   } 
   else {
     if (COMMAND == "LIVE") {
-      Serial.print("SLAVE> ");
-      Serial.println(COMMAND);
+      Serial.println(String(LOG_NO++) + "| SLAVE> " + COMMAND);
       STARTUP_CHECK_COMPLETE = true;
-      Serial.println("MASTER> SLAVE READY");
+      Serial.println(String(LOG_NO++) + "| MASTER> SLAVE READY");
     } else {
-      Serial.println("MASTER> I Don't think I'm supposed to get here?");
+      Serial.println(String(LOG_NO++) + "| MASTER> I Don't think I'm supposed to get here?");
     }
   }
   delay(10);
@@ -221,20 +214,21 @@ void sendMessage(String msg) {
 // TELL SHOUTS
 // ==============================
 
-void Tell_Shout(String COMMAND) {
-  if (COMMAND.equals("STARTUP")) {
+void Tell_Shout(String TS_COMMAND) {
+  if (TS_COMMAND.equals("STARTUP")) {
     sendMessage("STARTUP");
   } else {
-    if (COMMAND.equals("LISTEN")) {
-      sendMessage("LISTEN");
+    if (TS_COMMAND.equals("LISTENING")) {
+      sendMessage("LISTENING");
     } else {
-      if (COMMAND.equals("RPS")) {
+      if (TS_COMMAND.equals("RPS")) {
         sendMessage("RPS");
       } else {
-        if (COMMAND.equals("MOVEMENT")) {
+        if (TS_COMMAND.equals("MOVEMENT")) {
           sendMessage("MOVEMENT");
-        } else {
-          Serial.println("MASTER> TELL SHOUT ERROR UNRECOGNISED COMMAND: " + COMMAND);
+        } 
+        else {
+          Serial.println(String(LOG_NO++) + "| MASTER> TELL SHOUT ERROR UNRECOGNISED COMMAND: " + TS_COMMAND);
         }
       }
     }
@@ -449,40 +443,40 @@ void Angry_FACE() {
 
 void Sad_FACE_1() {
   oled.clearDisplay();
-  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
-  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(38, 18, 18, 25, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 25, 45, WHITE);
   oled.display();
   delay(10);
 }
 
 void Sad_FACE_2() {
   oled.clearDisplay();
-  oled.fillRoundRect(35, 20, 18, 32, 45, WHITE);
-  oled.fillRoundRect(71, 20, 18, 32, 45, WHITE);
+  oled.fillRoundRect(35, 20, 18, 25, 45, WHITE);
+  oled.fillRoundRect(71, 20, 18, 25, 45, WHITE);
   oled.display();
   delay(10);
 }
 
 void Sad_FACE_3() {
   oled.clearDisplay();
-  oled.fillRoundRect(38, 22, 18, 32, 45, WHITE);
-  oled.fillRoundRect(74, 22, 18, 32, 45, WHITE);
+  oled.fillRoundRect(38, 22, 18, 25, 45, WHITE);
+  oled.fillRoundRect(74, 22, 18, 25, 45, WHITE);
   oled.display();
   delay(10);
 }
 
 void Sad_FACE_4() {
   oled.clearDisplay();
-  oled.fillRoundRect(41, 24, 18, 32, 45, WHITE);
-  oled.fillRoundRect(77, 24, 18, 32, 45, WHITE);
+  oled.fillRoundRect(41, 24, 18, 25, 45, WHITE);
+  oled.fillRoundRect(77, 24, 18, 25, 45, WHITE);
   oled.display();
   delay(10);
 }
 
 void Sad_FACE_5() {
   oled.clearDisplay();
-  oled.fillRoundRect(38, 25, 18, 32, 45, WHITE);
-  oled.fillRoundRect(74, 25, 18, 32, 45, WHITE);
+  oled.fillRoundRect(38, 25, 18, 25, 45, WHITE);
+  oled.fillRoundRect(74, 25, 18, 25, 45, WHITE);
   oled.display();
   delay(10);
 }
@@ -599,7 +593,7 @@ void BE_SELF() {
 void Movement_Listen() {
 
   MOVING = true;
-  Serial.println("MASTER> MANUAL ACTIVE");
+  Serial.println(String(LOG_NO++) + "| MASTER> MANUAL ACTIVE");
   while (MOVING) {
     Tell_Shout("REQUEST: MOVEMENT");
 
@@ -609,29 +603,29 @@ void Movement_Listen() {
       break;
     } else {
       if (MOVEMENT_COMMAND.equals("FORWARD")) {
-        Serial.println("MASTER> MOVEMENT_LISTEN: Going Forward");
+        Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Going Forward");
         go_forward(0.25);
         MOVEMENT_COMMAND = "VOID";
       } else {
         if (MOVEMENT_COMMAND.equals("REVERSE")) {
-          Serial.println("MASTER> MOVEMENT_LISTEN: Going Back");
+          Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Going Back");
           go_back(0.25);
           MOVEMENT_COMMAND = "VOID";
         } else {
           if (MOVEMENT_COMMAND.equals("LEFT")) {
-            Serial.println("MASTER> MOVEMENT_LISTEN: Turning Left");
+            Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Turning Left");
             rotate_left(45);
             MOVEMENT_COMMAND = "VOID";
           } else {
             if (MOVEMENT_COMMAND.equals("RIGHT")) {
-              Serial.println("MASTER> MOVEMENT_LISTEN: Turning Right");
+              Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Turning Right");
               rotate_right(45);
               MOVEMENT_COMMAND = "VOID";
             } else {
               if (MOVEMENT_COMMAND.equals("VOID")) {
-                Serial.println("MASTER> MOVEMENT_LISTEN: NO COMMAND");
+                Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: NO COMMAND");
               } else {
-                Serial.println("MASTER> MOVEMENT_LISTEN> UNRECOGNIZED COMMAND: " + MOVEMENT_COMMAND);
+                Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN> UNRECOGNIZED COMMAND: " + MOVEMENT_COMMAND);
                 ERROR();
                 MOVEMENT_COMMAND = "VOID";
               }
@@ -658,14 +652,14 @@ void Movement_Listen() {
   delay(10);
   digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
   delay(10);
-  Serial.println("MASTER> MANUAL DISENGAGED");
+  Serial.println(String(LOG_NO++) + "| MASTER> MANUAL DISENGAGED");
   MOVEMENT_COMMAND = "VOID";
   delay(10);
 }
 
 int RPS_Listen() {
   int RPS_LISTEN_ATTEMPTS = 0;
-  Serial.println("MASTER> RPS LISTENING");
+  Serial.println(String(LOG_NO++) + "| MASTER> RPS LISTENING");
   while (RPSING && RPS_LISTEN_ATTEMPTS<3) {
     delay(1000);
     Tell_Shout("RPS");
@@ -682,9 +676,9 @@ int RPS_Listen() {
           return 3;
         } else {
           if (RPS_COMMAND.equals("VOID")) {
-            Serial.println("MASTER> RPS_LISTEN> NO COMMAND");
+            Serial.println(String(LOG_NO++) + "| MASTER> RPS_LISTEN> NO COMMAND");
           } else {
-            Serial.println("MASTER> RPS_LISTEN> UNRECOGNIZED COMMAND: " + RPS_COMMAND);
+            Serial.println(String(LOG_NO++) + "| MASTER> RPS_LISTEN> UNRECOGNIZED COMMAND: " + RPS_COMMAND);
             RPS_COMMAND = "VOID";
           }
         }
@@ -764,7 +758,7 @@ void Alone() {
 }
 
 void Win() {
-  Serial.println("MASTER> RPS> BOT Won!");
+  Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT Won!");
   Happy_FACE();
   arms(90);
   delay(300);
@@ -781,7 +775,7 @@ void Win() {
 }
 
 void Lose() {
-  Serial.println("MASTER> RPS> BOT Lost...");
+  Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT Lost...");
   Angry_FACE();
   arms(30);
   delay(500);
@@ -803,7 +797,7 @@ void Lose() {
 // ==============================
 
 void RPS() {
-  Serial.println("MASTER> Playing Rock Paper Scissors");
+  Serial.println(String(LOG_NO++) + "| MASTER> Playing Rock Paper Scissors");
   int BOT_PICK;
   int PLAYER_PICK;
   RPSING = true;
@@ -901,10 +895,11 @@ void ERROR_INVERSE() {
 
 void Listen() {
   LISTENING = true;
-  Tell_Shout("LISTEN");
   TURNING_AROUND = true;
+  bool LISTEN_FORCE_THROUGH = false;
   for (int count = 0; count < 4; count++) {
-    if (LISTEN_COMMAND.equals("EXIT")){
+    if (LISTEN_COMMAND.equals("OVERRIDE") || LISTEN_COMMAND.equals("ALONE") || LISTEN_COMMAND.equals("BE_SELF") || LISTEN_COMMAND.equals("MANUAL_ON") || LISTEN_COMMAND.equals("RPS")){
+      LISTEN_FORCE_THROUGH = true;
       break;
     }
     rotate_right(90);
@@ -912,11 +907,17 @@ void Listen() {
     digitalWrite(LED_PIN, HIGH);
     delay(10);
   }
-  TURNING_AROUND = false;
-  if (!LISTEN_COMMAND.equals("EXIT")) {
-    Tell_Shout("LISTEN_TELL_ME");
-  }
   digitalWrite(LED_PIN, LOW);
+  TURNING_AROUND = false;
+  if(LISTEN_FORCE_THROUGH) {
+    Serial.println(String(LOG_NO++) + "| MASTER> LISTEN> FORCING COMMAND: " + LISTEN_COMMAND);
+  }
+  else {
+    if (!LISTEN_COMMAND.equals("OVERRIDE")) {
+      Tell_Shout("LISTENING");
+    }
+  }
+  LISTEN_FORCE_THROUGH = false;
   delay(1500);
 
   if (LISTEN_COMMAND.equals("ALONE")) {
@@ -935,16 +936,16 @@ void Listen() {
           LISTEN_COMMAND = "VOID";
           RPS();
         } else {
-          if (LISTEN_COMMAND.equals("EXIT")) {
-            Serial.println("MASTER> LISTEN> FORCE EXITTED");
+          if (LISTEN_COMMAND.equals("OVERRIDE")) {
+            Serial.println(String(LOG_NO++) + "| MASTER> LISTEN> FORCE EXITTED THROUGH OVERRIDE");
             ERROR_INVERSE();
             ERROR();
           }
           else {
             if (LISTEN_COMMAND.equals("VOID")) {
-              Serial.println("MASTER> LISTEN> NO COMMAND RECEIVED");
+              Serial.println(String(LOG_NO++) + "| MASTER> LISTEN> NO COMMAND RECEIVED");
             } else {
-              Serial.println("MASTER> LISTEN: UNRECOGNISED COMMAND: " + LISTEN_COMMAND);
+              Serial.println(String(LOG_NO++) + "| MASTER> LISTEN: UNRECOGNISED COMMAND: " + LISTEN_COMMAND);
               LISTEN_COMMAND = "VOID";
               ERROR();
             }
@@ -1046,9 +1047,9 @@ void setup() {
   oled.setCursor(0, 0);
   oled.clearDisplay();
 
-  Serial.println("BOOTING");
+  Serial.println(String(LOG_NO++) + "| MASTER> BOOTING");
   delay(1000);
-  Serial.println("ACTIVE");
+  Serial.println(String(LOG_NO++) + "| MASTER> ACTIVE");
   BOOTING();
   delay(10);
 }
@@ -1062,8 +1063,11 @@ void loop() {
       lastSendTime = millis();
     }
     STARTUP();
+    
     delay(2500);
   } else {
+    DEFAULT_FACE();
+    delay(10);
     Listen();
   }
   delay(10);
