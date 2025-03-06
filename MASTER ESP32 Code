@@ -86,7 +86,8 @@ Servo ARM1;
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // ESP NOW COMMUNICATION
-uint8_t peerMac[] = { 0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C };  // Naim's Main ESP32
+//uint8_t peerMac[] = { 0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C };  // Placeholder for Naim's Main ESP32 CAM
+uint8_t peerMac[] = { 0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C };  // Naim's Testing ESP32 CAM
 
 
 // ==============================
