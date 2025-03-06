@@ -12,7 +12,7 @@
         CAUTION:
        ---------
         THIS CODE CAN CAUSE WINDOWS BLUE SCREENS OF DEATH (IQRL_NOT_LESS_OR_EQUAL)
-        DUE TO EXCESSIVE SERIAL PRINTS. BE FORWARNED
+        DUE TO EXCESSIVE SERIAL PRINTS. CLEAR YOUR SERIAL MONITOR REGULARLY. BE FORWARNED
 
         THIS CODE IS UNTESTED ON MAC OS IT MAY CAUSE KERNEL PANICS
 
@@ -96,7 +96,7 @@ const int REAR_LEFT_REVERSE_PIN = 27;
 const int REAR_RIGHT_REVERSE_PIN = 12;
 
 // Master ESP Troubleshooting LED
-int LED_PIN = 2;
+const int LED_PIN = 2;
 
 
 
@@ -460,21 +460,21 @@ void RPS_FACE() {
 
 void ROCK_FACE() {
   oled.clearDisplay();
-  oled.drawCircle();
-  oled.Display();
+  //oled.drawCircle();
+  oled.display();
 }
 
 void PAPER_FACE() {
   oled.clearDisplay();
-  oled.drawRect();
-  oled.Display();
+  //oled.drawRect();
+  oled.display();
 }
 
 void SCISSORS_FACE() {
   oled.clearDisplay();
-  oled.drawLine();
-  oled.drawLine();
-  oled.Display();
+  //oled.drawLine();
+  //oled.drawLine();
+  oled.display();
 }
 
 void BOOTING() {
@@ -557,6 +557,8 @@ void Movement_Listen() {
   digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
   digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
   Serial.println("MASTER> Exitted Manual Mode");
+  MOVEMENT_COMMAND = "VOID";
+  delay(1000);
 }
 
 int RPS_Listen() {
@@ -628,6 +630,7 @@ void alone() {
 }
 
 void Win() {
+  Serial.println("BOT Won!");
   Happy_FACE();
   arms(90);
   delay(300);
@@ -643,6 +646,7 @@ void Win() {
 }
 
 void Lose() {
+  Serial.println("BOT Lost...");
   Angry_FACE();
   arms(45);
   delay(300);
@@ -752,6 +756,7 @@ void Listen() {
   for(int count=0; count<4; count++) {
     rotate_right(90);
     Look_Around_FACE();
+    digitalWrite(2, HIGH);
   }
   delay(1500);
 
@@ -775,11 +780,13 @@ void Listen() {
           rock_paper_scissors();
         }
         else {
-          if(LISTEN_COMMAND != "VOID") {
-            Serial.println("MASTER> LISTEN> NO COMMAND");
+          if(!(LISTEN_COMMAND.equals("VOID"))) {
+            Serial.println("MASTER> LISTEN> NO COMMAND SENT");
           }
-          Serial.println("MASTER> LISTEN: UNRECOGNISED COMMAND: " + LISTEN_COMMAND);
-          Error();
+          else {
+            Serial.println("MASTER> LISTEN: UNRECOGNISED COMMAND: " + LISTEN_COMMAND);
+            Error();
+          }
         }
       }
     }
@@ -799,6 +806,9 @@ void Listen() {
 void setup() {
   // Serial
   Serial.begin(115200);
+
+  // ERROR LED
+  pinMode(LED_PIN, OUTPUT);
 
   // ESP NOW
   WiFi.mode(WIFI_STA);
@@ -833,7 +843,7 @@ void setup() {
   pinMode(REAR_RIGHT_FORWARD_PIN, OUTPUT);
   pinMode(REAR_LEFT_REVERSE_PIN, OUTPUT);
   pinMode(REAR_RIGHT_REVERSE_PIN, OUTPUT);
-  pinMode(LED_PIN, OUTPUT);
+  
 
   digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
   digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
@@ -844,7 +854,7 @@ void setup() {
   digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
   digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
   digitalWrite(LED_PIN, LOW);
-
+  arms(0);
   // OLED 
   if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("failed to start SSD1306 OLED"));
@@ -855,7 +865,9 @@ void setup() {
   oled.setCursor(0, 0);
   oled.clearDisplay();
 
-
+  Serial.println("BOOTING");
+  delay(1000);
+  Serial.println("ACTIVE");
   BOOTING();
 }
 
