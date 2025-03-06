@@ -18,8 +18,16 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
     
     if (COMMAND == "ON") {
         digitalWrite(ledPin, HIGH);
-    } else if (COMMAND == "OFF") {
+    }
+    else {
+      if (COMMAND == "OFF") {
         digitalWrite(ledPin, LOW);
+      }
+      else {
+        if (COMMAND == "STARTUP") {
+          sendMessage("LIVE");
+        }
+      }
     }
 }
 
@@ -61,4 +69,3 @@ void loop() {
         sendMessage(input);
     }
 }
-
