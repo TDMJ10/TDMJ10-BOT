@@ -1,8 +1,10 @@
 /*
-  Signed Naim Iftekhar Rahman (TDMJ10)
+  Written by Naim Iftekhar Rahman (TDMJ10)
   tdmj10@gmail.com
   naimiftekharrahman@gmail.com
-  Student of Bangldesh BRAC University 24201190
+  naim.iftekhar.rahman@g.bracu.ac.bd
+  +8801993537189
+  Student of Bangldesh BRAC University (24201190)
   ROBU FALL 2024 BOR PROJECT
   TEAM I-NPC
 
@@ -11,10 +13,11 @@
 
         CAUTION:
        ---------
-        THIS CODE CAN CAUSE WINDOWS BLUE SCREENS OF DEATH (IQRL_NOT_LESS_OR_EQUAL)
-        DUE TO EXCESSIVE SERIAL PRINTS. CLEAR YOUR SERIAL MONITOR REGULARLY. BE FORWARNED
+        THIS CODE CAN CAUSE BLUE SCREENS OF DEATH (IQRL_NOT_LESS_OR_EQUAL) ON WINDOWS
+        DUE TO EXCESSIVE SERIAL PRINTS ON ARDUINO IDE DUE TO A BUG. (As of 3/6/25
+        CLEAR YOUR SERIAL MONITOR REGULARLY.
 
-        THIS CODE IS UNTESTED ON MAC OS IT MAY CAUSE KERNEL PANICS
+        THIS CODE IS UNTESTED ON MAC OS. IT MAY CAUSE KERNEL PANICS OR CRASHES TOO.
 
  To do:
 ==========
@@ -34,6 +37,30 @@
 // Global Variables
 // ==============================
 
+// ESP NOW + TELL SHOUT
+String PREVIOUS_COMMAND = "ERROR";
+String COMMAND = "ERROR";
+
+// MOVEMENT
+bool MOVING = false;
+  // MOVEMENT TELLSHOUT
+  String MOVEMENT_COMMAND = "ERROR";
+
+// RPS
+bool RPSING = false;
+  // RPS TELLSHOUT
+  String RPS_COMMAND = "ERROR";
+
+// LISTEN
+bool LISTENING = false;
+  // LISTEN TELLSHOUT
+  String LISTEN_COMMAND = "ERROR";
+
+// SEARCHING
+bool TURNING_AROUND = false;
+
+// STARTUP TROUBLESHOOTING
+bool STARTUP_CHECK_COMPLETE = false;
 
 
 // ==============================
@@ -54,22 +81,12 @@ Servo ARM1;
 //OLED
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-#define OLED_RESET     -1
+#define OLED_RESET -1
 #define SCREEN_ADDRESS 0x3C
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // ESP NOW COMMUNICATION
-String PREVIOUS_COMMAND = "ERROR";
-String COMMAND = "ERROR";
-String LISTEN_COMMAND = "ERROR";
-String RPS_COMMAND = "ERROR";
-String MOVEMENT_COMMAND = "ERROR";
-bool MOVING = false;
-bool RPSING = false;
-bool STARTUP_CHECK_COMPLETE = false;
-bool LISTENING = false;
-
-uint8_t peerMac[] = {0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C}; // ESP32 #2 MAC
+uint8_t peerMac[] = { 0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C };  // Naim's Main ESP32
 
 
 // ==============================
@@ -81,7 +98,7 @@ const int ARM1_PIN = 15;
 
 // Wheels
 // FRONT (WHITE): A IS RIGHT B IS LEFT
- 
+
 const int FRONT_LEFT_FORWARD_PIN = 33;
 const int FRONT_RIGHT_FORWARD_PIN = 26;
 
@@ -106,13 +123,12 @@ const int LED_PIN = 2;
 
 
 void STARTUP() {
-  for(int count=0; count<15; count++) {
-    digitalWrite(LED_PIN, HIGH);
-    delay(250);
-    digitalWrite(LED_PIN, LOW);
-    delay(250);
-  }
-  Serial.println("READY");
+  digitalWrite(LED_PIN, HIGH);
+  delay(250);
+  digitalWrite(LED_PIN, LOW);
+  delay(250);
+  Serial.println("MASTER> READY TO COMMUNICATE");
+  DEFAULT_FACE();
   delay(10);
 }
 
@@ -122,36 +138,70 @@ void STARTUP() {
 // ==============================
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-    Serial.println(status == ESP_NOW_SEND_SUCCESS ? "MASTER> SENT SLAVE: " + PREVIOUS_COMMAND: "MASTER> FAILED TO SEND");
-    delay(10);
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "MASTER> SENT SLAVE: " + PREVIOUS_COMMAND : "MASTER> FAILED TO COMMUNICATE WITH SLAVE");
+  delay(10);
 }
 
 void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData, int len) {
-  COMMAND = String((char*)incomingData);
-  if(STARTUP_CHECK_COMPLETE) {
-    if(MOVING) {
-      MOVEMENT_COMMAND = COMMAND;
-      Serial.print("SLAVE> MOVING> "); Serial.println(COMMAND);
-    }
-    else if (RPSING) {
-      RPS_COMMAND = COMMAND;
-      Serial.print("SLAVE> RPSING> "); Serial.println(COMMAND);
-    }
-    else if (LISTENING) {
-      LISTEN_COMMAND = COMMAND;
-      Serial.print("SLAVE> LISTENING> "); Serial.println(COMMAND);
+  COMMAND = String((char *)incomingData);
+  if (STARTUP_CHECK_COMPLETE) {
+    if(!TURNING_AROUND) {
+      if (MOVING) {
+        MOVEMENT_COMMAND = COMMAND;
+        Serial.print("SLAVE> MOVING> ");
+        Serial.println(COMMAND);
+      }
+      else {
+        if (RPSING) {
+          RPS_COMMAND = COMMAND;
+          Serial.print("SLAVE> RPSING> ");
+          Serial.println(COMMAND);
+        }
+        else {
+          if (LISTENING) {
+            LISTEN_COMMAND = COMMAND;
+            Serial.print("SLAVE> LISTENING> ");
+            Serial.println(COMMAND);
+          }
+          else {
+            Serial.println("ERROR: NOT MOVEMENT, RPSING OR LISTENING");
+          } 
+        }
+      }
     }
     else {
-      Serial.println ("ERROR: NOT MOVEMENT, RPSING OR LISTENING");
+      ERROR_INVERSE();
+      if (MOVING) {
+        MOVEMENT_COMMAND = COMMAND;
+        Serial.print("SLAVE> MOVING> ");
+        Serial.println(COMMAND);
+      }
+      else {
+        if (RPSING) {
+          RPS_COMMAND = COMMAND;
+          Serial.print("SLAVE> RPSING> ");
+          Serial.println(COMMAND);
+        }
+        else {
+          if (LISTENING) {
+            LISTEN_COMMAND = COMMAND;
+            Serial.print("SLAVE> LISTENING> ");
+            Serial.println(COMMAND);
+          }
+          else {
+            Serial.println("ERROR: NOT MOVEMENT, RPSING OR LISTENING");
+          } 
+        }
+      }
     }
-  }
+  } 
   else {
     if (COMMAND == "LIVE") {
-      Serial.print("SLAVE> "); Serial.println(COMMAND);
+      Serial.print("SLAVE> ");
+      Serial.println(COMMAND);
       STARTUP_CHECK_COMPLETE = true;
       Serial.println("MASTER> SLAVE READY");
-    }
-    else {
+    } else {
       Serial.println("MASTER> I Don't think I'm supposed to get here?");
     }
   }
@@ -160,9 +210,9 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
 
 
 void sendMessage(String msg) {
-    PREVIOUS_COMMAND = msg;  // Store the message before sending
-    esp_now_send(peerMac, (uint8_t *)msg.c_str(), msg.length() + 1);
-    delay(10);
+  PREVIOUS_COMMAND = msg;  // Store the message before sending
+  esp_now_send(peerMac, (uint8_t *)msg.c_str(), msg.length() + 1);
+  delay(10);
 }
 
 
@@ -173,21 +223,17 @@ void sendMessage(String msg) {
 void Tell_Shout(String COMMAND) {
   if (COMMAND.equals("STARTUP")) {
     sendMessage("STARTUP");
-  }
-  else {
-    if(COMMAND.equals("LISTEN")) {
-    sendMessage("LISTEN");
-    }
-    else {
+  } else {
+    if (COMMAND.equals("LISTEN")) {
+      sendMessage("LISTEN");
+    } else {
       if (COMMAND.equals("RPS")) {
         sendMessage("RPS");
-      }
-      else {
+      } else {
         if (COMMAND.equals("MOVEMENT")) {
           sendMessage("MOVEMENT");
-        }
-        else {
-          Serial.println("MASTER> TELL SHOUT ERROR UNRECOGNISED COMMAND: "+COMMAND);
+        } else {
+          Serial.println("MASTER> TELL SHOUT ERROR UNRECOGNISED COMMAND: " + COMMAND);
         }
       }
     }
@@ -196,119 +242,119 @@ void Tell_Shout(String COMMAND) {
 }
 
 // ==============================
-// Movement Functions 
+// Movement Functions
 // ==============================
 
 void go_forward(double value) {
-  double duration = value*1000.0; // Value multiplier here needs to be calibrated when prototype is made
+  double duration = value * 1000.0;  // Value multiplier here needs to be calibrated when prototype is made
   double start = 0.0;
   bool moving = false;
 
   if (!moving) {
-    start = millis(); 
+    start = millis();
     moving = true;
-  } 
-  
-  while(moving) {
+  }
+
+  while (moving) {
     if (millis() - start < duration) {
-    digitalWrite(FRONT_RIGHT_FORWARD_PIN, HIGH);
-    digitalWrite(REAR_LEFT_FORWARD_PIN, HIGH);
-    digitalWrite(FRONT_LEFT_FORWARD_PIN, HIGH);
-    digitalWrite(REAR_RIGHT_FORWARD_PIN, HIGH);
-  } else {
-    digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
-    digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
-    digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
-    digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
-    moving = false;
-    } 
+      digitalWrite(FRONT_RIGHT_FORWARD_PIN, HIGH);
+      digitalWrite(REAR_LEFT_FORWARD_PIN, HIGH);
+      digitalWrite(FRONT_LEFT_FORWARD_PIN, HIGH);
+      digitalWrite(REAR_RIGHT_FORWARD_PIN, HIGH);
+    } else {
+      digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
+      digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
+      digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
+      digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
+      moving = false;
+    }
   }
   delay(10);
 }
 
 void go_back(double value) {
-  double duration = value*1000.0; // Value multiplier here needs to be calibrated when prototype is made
+  double duration = value * 1000.0;  // Value multiplier here needs to be calibrated when prototype is made
   double start = 0.0;
   bool moving = false;
 
   if (!moving) {
-    start = millis(); 
+    start = millis();
     moving = true;
-  } 
-  
-  while(moving) {
+  }
+
+  while (moving) {
     if (millis() - start < duration) {
-    digitalWrite(FRONT_RIGHT_REVERSE_PIN, HIGH);
-    digitalWrite(REAR_LEFT_REVERSE_PIN, HIGH);
-    digitalWrite(FRONT_LEFT_REVERSE_PIN, HIGH);
-    digitalWrite(REAR_RIGHT_REVERSE_PIN, HIGH);
-  } else {
-    digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
-    digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
-    digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
-    digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
-    moving = false;
-    } 
+      digitalWrite(FRONT_RIGHT_REVERSE_PIN, HIGH);
+      digitalWrite(REAR_LEFT_REVERSE_PIN, HIGH);
+      digitalWrite(FRONT_LEFT_REVERSE_PIN, HIGH);
+      digitalWrite(REAR_RIGHT_REVERSE_PIN, HIGH);
+    } else {
+      digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
+      digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
+      digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
+      digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
+      moving = false;
+    }
   }
   delay(10);
 }
 
-void rotate_left (double value) { // Scuffed Method Since we're not using a gyro - in degrees
-  double duration = value*10.0; // Value multiplier here needs to be calibrated when prototype is made
+void rotate_left(double value) {   // Scuffed Method Since we're not using a gyro - in degrees
+  double duration = value * 10.0;  // Value multiplier here needs to be calibrated when prototype is made
   double start = 0.0;
   bool rotating = false;
 
   if (!rotating) {
-    start = millis(); 
+    start = millis();
     rotating = true;
-  } 
+  }
 
-  while(rotating) {
+  while (rotating) {
     if (millis() - start < duration) {
-    digitalWrite(FRONT_RIGHT_FORWARD_PIN, HIGH);
-    digitalWrite(REAR_LEFT_FORWARD_PIN, HIGH);
-    digitalWrite(FRONT_LEFT_REVERSE_PIN, HIGH);
-    digitalWrite(REAR_RIGHT_REVERSE_PIN, HIGH);
-  } else {
-    digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
-    digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
-    digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
-    digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
-    rotating = false;
-    } 
+      digitalWrite(FRONT_RIGHT_FORWARD_PIN, HIGH);
+      digitalWrite(REAR_LEFT_FORWARD_PIN, HIGH);
+      digitalWrite(FRONT_LEFT_REVERSE_PIN, HIGH);
+      digitalWrite(REAR_RIGHT_REVERSE_PIN, HIGH);
+    } else {
+      digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
+      digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
+      digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
+      digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
+      rotating = false;
+    }
   }
   delay(10);
 }
 
-void rotate_right (double value) { // Scuffed Method Since we're not using a gyro - in degrees
-  double duration = value*10.0; // Value multiplier here needs to be calibrated when prototype is made
+void rotate_right(double value) {  // Scuffed Method Since we're not using a gyro - in degrees
+  double duration = value * 10.0;  // Value multiplier here needs to be calibrated when prototype is made
   double start = 0.0;
   bool rotating = false;
 
   if (!rotating) {
-    start = millis(); 
+    start = millis();
     rotating = true;
-  } 
-  
-  while(rotating) {
+  }
+
+  while (rotating) {
     if (millis() - start < duration) {
-    digitalWrite(FRONT_LEFT_FORWARD_PIN, HIGH);
-    digitalWrite(REAR_RIGHT_FORWARD_PIN, HIGH);
-    digitalWrite(FRONT_RIGHT_REVERSE_PIN, HIGH);
-    digitalWrite(REAR_LEFT_REVERSE_PIN, HIGH);
-  } else {
-    digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
-    digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
-    digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
-    digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
-    rotating = false;
-    } 
+      digitalWrite(FRONT_LEFT_FORWARD_PIN, HIGH);
+      digitalWrite(REAR_RIGHT_FORWARD_PIN, HIGH);
+      digitalWrite(FRONT_RIGHT_REVERSE_PIN, HIGH);
+      digitalWrite(REAR_LEFT_REVERSE_PIN, HIGH);
+    } else {
+      digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
+      digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
+      digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
+      digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
+      rotating = false;
+    }
   }
   delay(10);
 }
 
 void shake(int intensity, int number_of_times) {
-  for(int count=0;count<number_of_times;count++) {
+  for (int count = 0; count < number_of_times; count++) {
     rotate_left(intensity);
     rotate_right(intensity);
   }
@@ -326,7 +372,7 @@ void arms_reset() {
 }
 
 void arms_shake(int degrees, int number_of_times) {
-  for(int count=0;count<number_of_times;count++) {
+  for (int count = 0; count < number_of_times; count++) {
     arms_reset();
     delay(1000);
     ARM1.write(degrees);
@@ -390,14 +436,6 @@ void Happy_FACE() {
   delay(350);
 }
 
-void Idle_FACE() {
-  oled.clearDisplay();
-  oled.drawRect(43, 18, 18, 32, WHITE);
-  oled.drawRect(78, 18, 18, 32, WHITE);
-  oled.display();
-  delay(10);
-}
-
 void Angry_FACE() {
   oled.clearDisplay();
   oled.fillRoundRect(29, 18, 34, 15, 45, WHITE);
@@ -406,6 +444,46 @@ void Angry_FACE() {
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
   oled.display();
   delay(1000);
+}
+
+void Sad_FACE_1() {
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
+  delay(10);
+}
+
+void Sad_FACE_2() {
+  oled.clearDisplay();
+  oled.fillRoundRect(35, 20, 18, 32, 45, WHITE);
+  oled.fillRoundRect(71, 20, 18, 32, 45, WHITE);
+  oled.display();
+  delay(10);
+}
+
+void Sad_FACE_3() {
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 22, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 22, 18, 32, 45, WHITE);
+  oled.display();
+  delay(10);
+}
+
+void Sad_FACE_4() {
+  oled.clearDisplay();
+  oled.fillRoundRect(41, 24, 18, 32, 45, WHITE);
+  oled.fillRoundRect(77, 24, 18, 32, 45, WHITE);
+  oled.display();
+  delay(10);
+}
+
+void Sad_FACE_5() {
+  oled.clearDisplay();
+  oled.fillRoundRect(38, 25, 18, 32, 45, WHITE);
+  oled.fillRoundRect(74, 25, 18, 32, 45, WHITE);
+  oled.display();
+  delay(10);
 }
 
 void Look_Around_FACE() {
@@ -499,8 +577,8 @@ void SCISSORS_FACE() {
 
 void BOOTING() {
   oled.clearDisplay();
-  oled.drawRoundRect(38, 18, 18, 32, 45, WHITE);
-  oled.drawRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.drawRect(43, 18, 18, 32, WHITE);
+  oled.drawRect(78, 18, 18, 32, WHITE);
   oled.display();
   delay(10);
 }
@@ -511,64 +589,57 @@ void BOOTING() {
 
 
 
-void Be_Self() {
-  Happy_FACE();
-  Idle_FACE();
-  rock_paper_scissors();
-  Idle_FACE();
+void BE_SELF() {
+  Playful();
+  DEFAULT_FACE();
   delay(10);
 }
 
 void Movement_Listen() {
 
   MOVING = true;
-  Serial.println("MASTER> Entered Manual Mode");
-  while(MOVING) {
-    delay(1000);
-    Tell_Shout("MOVEMENT");
-    
-    if(MOVEMENT_COMMAND == "Manual_OFF") {
+  Serial.println("MASTER> MANUAL ACTIVE");
+  while (MOVING) {
+    Tell_Shout("REQUEST: MOVEMENT");
+
+    if (MOVEMENT_COMMAND.equals("MANUAL_OFF")) {
       MOVING = false;
-      MOVEMENT_COMMAND == "VOID";
+      MOVEMENT_COMMAND.equals("VOID");
       break;
-    }
-    else {
-      if (MOVEMENT_COMMAND == "FORWARD") {
-        Serial.println("MASTER> Motion: Going Forward");
+    } else {
+      if (MOVEMENT_COMMAND.equals("FORWARD")) {
+        Serial.println("MASTER> MOVEMENT_LISTEN: Going Forward");
         go_forward(0.25);
         MOVEMENT_COMMAND = "VOID";
-      }
-      else {
-        if (MOVEMENT_COMMAND == "REVERSE") {
-          Serial.println("MASTER> Motion: Going Back");
+      } else {
+        if (MOVEMENT_COMMAND.equals("REVERSE")) {
+          Serial.println("MASTER> MOVEMENT_LISTEN: Going Back");
           go_back(0.25);
           MOVEMENT_COMMAND = "VOID";
-        }
-        else {
-          if (MOVEMENT_COMMAND == "LEFT") {
-            Serial.println("MASTER> Motion: Turning Left");
+        } else {
+          if (MOVEMENT_COMMAND.equals("LEFT")) {
+            Serial.println("MASTER> MOVEMENT_LISTEN: Turning Left");
             rotate_left(45);
             MOVEMENT_COMMAND = "VOID";
-          }
-          else {
-            if (MOVEMENT_COMMAND == "RIGHT") {
-              Serial.println("MASTER> Motion: Turning Right");
+          } else {
+            if (MOVEMENT_COMMAND.equals("RIGHT")) {
+              Serial.println("MASTER> MOVEMENT_LISTEN: Turning Right");
               rotate_right(45);
               MOVEMENT_COMMAND = "VOID";
-            }
-            else {
-              if(MOVEMENT_COMMAND == "VOID" || MOVEMENT_COMMAND == "") {
-                  Serial.println("MASTER> MOVEMENT_LISTEN> NO COMMAND");
+            } else {
+              if (MOVEMENT_COMMAND.equals("VOID")) {
+                Serial.println("MASTER> MOVEMENT_LISTEN: NO COMMAND");
+              } else {
+                Serial.println("MASTER> MOVEMENT_LISTEN> UNRECOGNIZED COMMAND: " + MOVEMENT_COMMAND);
+                ERROR();
+                MOVEMENT_COMMAND = "VOID";
               }
-              else {
-                Serial.println("MASTER> Movement_Listen: UNRECOGNIZED COMMAND: " + MOVEMENT_COMMAND);
-                Error();
-              }
             }
-          } 
+          }
         }
       }
     }
+    delay(1000);
   }
   digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
   delay(10);
@@ -586,84 +657,113 @@ void Movement_Listen() {
   delay(10);
   digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
   delay(10);
-  Serial.println("MASTER> Exitted Manual Mode");
+  Serial.println("MASTER> MANUAL DISENGAGED");
   MOVEMENT_COMMAND = "VOID";
   delay(10);
 }
 
 int RPS_Listen() {
+  int RPS_LISTEN_ATTEMPTS = 0;
   Serial.println("MASTER> RPS LISTENING");
-  while(RPSING) {
+  while (RPSING && RPS_LISTEN_ATTEMPTS<3) {
     delay(1000);
     Tell_Shout("RPS");
-    if (RPS_COMMAND == "ROCK") {
+    if (RPS_COMMAND.equals("ROCK")) {
       RPS_COMMAND = "VOID";
-      RPSING = false;
       return 1;
-    }
-    else {
-      if (RPS_COMMAND == "PAPER") {
+    } else {
+      if (RPS_COMMAND.equals("PAPER")) {
         RPS_COMMAND = "VOID";
-        RPSING = false;
         return 2;
-      }
-      else {
-        if (RPS_COMMAND == "SCISSORS") {
+      } else {
+        if (RPS_COMMAND.equals("SCISSORS")) {
           RPS_COMMAND = "VOID";
-          RPSING = false;
           return 3;
-        }
-        else {
-          if (RPS_COMMAND == "VOID") {
+        } else {
+          if (RPS_COMMAND.equals("VOID")) {
             Serial.println("MASTER> RPS_LISTEN> NO COMMAND");
-          }
-          else {
-            Serial.println("RPS_Listen: Unrecognised Entry" + RPS_COMMAND);
+          } else {
+            Serial.println("MASTER> RPS_LISTEN> UNRECOGNIZED COMMAND: " + RPS_COMMAND);
+            RPS_COMMAND = "VOID";
           }
         }
       }
     }
   }
+  if(RPS_LISTEN_ATTEMPTS==3) {
+    return 0;
+  }
+  RPS_COMMAND = "VOID";
   delay(10);
 }
 
 
-void playful() {
+void Playful() {
   Happy_FACE();
-  delay(10);
+  arms(45);
+  delay(300);
+  Happy_FACE();
+  arms(0);
+  delay(300);
+  Happy_FACE();
+  arms(45);
+  delay(300);
+  Happy_FACE();
+  arms(0);
+  delay(300);
+  Happy_FACE();
+  arms(45);
+  delay(300);
+  Happy_FACE();
+  arms(0);
+  delay(300);
+  DEFAULT_FACE();
 }
 
 
-void alone() {
-  Idle_FACE();
+void Alone() {
+  Sad_FACE_1();
   arms(15);
   delay(300);
+  Sad_FACE_2();
   arms(0);
   delay(300);
+  Sad_FACE_3();
   arms(25);
   delay(300);
+  Sad_FACE_4();
   arms(0);
   delay(300);
+  Sad_FACE_5();
   arms(15);
   delay(300);
+  Sad_FACE_2();
   arms(0);
   delay(300);
+  Sad_FACE_4();
   arms(25);
   delay(300);
+  Sad_FACE_5();
   arms(0);
   delay(300);
+  Sad_FACE_4();
   arms(15);
   delay(300);
+  Sad_FACE_3();
   arms(0);
   delay(300);
+  Sad_FACE_2();
   arms(25);
   delay(300);
+  Sad_FACE_1();
   arms(0);
+  delay(300);
+  DEFAULT_FACE();
   delay(10);
 }
 
 void Win() {
-  Serial.println("BOT Won!");
+  Serial.println("MASTER> RPS> BOT Won!");
   Happy_FACE();
   arms(90);
   delay(300);
@@ -676,24 +776,24 @@ void Win() {
   arms(90);
   delay(300);
   arms(0);
-  delay(10);
+  delay(1000);
 }
 
 void Lose() {
-  Serial.println("BOT Lost...");
+  Serial.println("MASTER> RPS> BOT Lost...");
   Angry_FACE();
-  arms(45);
-  delay(300);
+  arms(30);
+  delay(500);
   arms(0);
-  delay(300);
-  arms(45);
-  delay(300);
+  delay(500);
+  arms(30);
+  delay(500);
   arms(0);
-  delay(300);
-  arms(45);
-  delay(300);
+  delay(500);
+  arms(30);
+  delay(500);
   arms(0);
-  delay(10);
+  delay(1000);
 }
 
 
@@ -701,12 +801,13 @@ void Lose() {
 // Play Functions
 // ==============================
 
-void rock_paper_scissors() {
-  int BOT_PICK = random(1, 4);
+void RPS() {
+  Serial.println("MASTER> Playing Rock Paper Scissors");
+  int BOT_PICK;
   int PLAYER_PICK;
   RPSING = true;
 
-  while(RPSING) {
+  while (RPSING) {
     delay(3000);
     arms(90);
     delay(350);
@@ -720,46 +821,48 @@ void rock_paper_scissors() {
     delay(350);
     arms(0);
     PLAYER_PICK = RPS_Listen();
+    BOT_PICK = random(1, 4);
 
-    if(BOT_PICK == PLAYER_PICK) {
+    if (BOT_PICK == PLAYER_PICK || PLAYER_PICK == 0) {
       Angry_FACE();
       delay(3000);
-    }
-    else {
-      if(BOT_PICK == 1 && PLAYER_PICK == 3) { // BOT ROCK, PLAYER SCISSORS
+      DEFAULT_FACE();
+    } else {
+      if (BOT_PICK == 1 && PLAYER_PICK == 3) {  // BOT ROCK, PLAYER SCISSORS
         ROCK_FACE();
         delay(1000);
         Win();
-      }
-      else {
-        if(BOT_PICK == 2 && PLAYER_PICK == 1) { // BOT PAPER, PLAYER ROCK
+        RPSING = false;
+      } else {
+        if (BOT_PICK == 2 && PLAYER_PICK == 1) {  // BOT PAPER, PLAYER ROCK
           PAPER_FACE();
           delay(1000);
           Win();
-        }
-        else {
-          if(BOT_PICK == 3 && PLAYER_PICK == 2) { // BOT SCISSORS, PLAYER PAPER
+          RPSING = false;
+        } else {
+          if (BOT_PICK == 3 && PLAYER_PICK == 2) {  // BOT SCISSORS, PLAYER PAPER
             SCISSORS_FACE();
             delay(1000);
             Win();
-          }
-          else {
-            if(BOT_PICK == 1) {
+            RPSING = false;
+          } else {
+            if (BOT_PICK == 1) {
               ROCK_FACE();
               delay(1000);
               Lose();
-            }
-            else {
-              if(BOT_PICK == 2) {
+              RPSING = false;
+            } else {
+              if (BOT_PICK == 2) {
                 PAPER_FACE();
                 delay(1000);
                 Lose();
-              }
-              else {
-                if(BOT_PICK == 3) {
+                RPSING = false;
+              } else {
+                if (BOT_PICK == 3) {
                   SCISSORS_FACE();
                   delay(1000);
                   Lose();
+                  RPSING = false;
                 }
               }
             }
@@ -775,10 +878,19 @@ void rock_paper_scissors() {
 // Other
 // ==============================
 
-void Error() {
+void ERROR() {
+  delay(10);
   digitalWrite(LED_PIN, HIGH);
   delay(1000);
   digitalWrite(LED_PIN, LOW);
+  delay(10);
+}
+
+void ERROR_INVERSE() {
+  delay(10);
+  digitalWrite(LED_PIN, LOW);
+  delay(1000);
+  digitalWrite(LED_PIN, HIGH);
   delay(10);
 }
 
@@ -789,40 +901,52 @@ void Error() {
 void Listen() {
   LISTENING = true;
   Tell_Shout("LISTEN");
-  for(int count=0; count<4; count++) {
+  TURNING_AROUND = true;
+  for (int count = 0; count < 4; count++) {
+    if (LISTEN_COMMAND.equals("EXIT")){
+      break;
+    }
     rotate_right(90);
     Look_Around_FACE();
-    digitalWrite(2, HIGH);
-    
+    digitalWrite(LED_PIN, HIGH);
+    delay(10);
   }
+  TURNING_AROUND = false;
+  if (!LISTEN_COMMAND.equals("EXIT")) {
+    Tell_Shout("LISTEN_TELL_ME");
+  }
+  digitalWrite(LED_PIN, LOW);
   delay(1500);
 
-  if (LISTEN_COMMAND == "Be_Self_alone") {
+  if (LISTEN_COMMAND.equals("ALONE")) {
     LISTEN_COMMAND = "VOID";
-    alone();
-  }
-  else {
-    if (LISTEN_COMMAND == "Be_Self") {
+    Alone();
+  } else {
+    if (LISTEN_COMMAND.equals("BE_SELF")) {
       LISTEN_COMMAND = "VOID";
-      Be_Self();
-    }
-    else {
-      if (LISTEN_COMMAND == "Manual_ON") {
+      BE_SELF();
+    } else {
+      if (LISTEN_COMMAND.equals("MANUAL_ON")) {
         LISTEN_COMMAND = "VOID";
         Movement_Listen();
-      }
-      else {
-        if (LISTEN_COMMAND == "RPS") {
+      } else {
+        if (LISTEN_COMMAND.equals("RPS")) {
           LISTEN_COMMAND = "VOID";
-          rock_paper_scissors();
-        }
-        else {
-          if(!(LISTEN_COMMAND.equals("VOID"))) {
-            Serial.println("MASTER> LISTEN> NO COMMAND SENT");
+          RPS();
+        } else {
+          if (LISTEN_COMMAND.equals("EXIT")) {
+            Serial.println("MASTER> LISTEN> FORCE EXITTED");
+            ERROR_INVERSE();
+            ERROR();
           }
           else {
-            Serial.println("MASTER> LISTEN: UNRECOGNISED COMMAND: " + LISTEN_COMMAND);
-            Error();
+            if (LISTEN_COMMAND.equals("VOID")) {
+              Serial.println("MASTER> LISTEN> NO COMMAND RECEIVED");
+            } else {
+              Serial.println("MASTER> LISTEN: UNRECOGNISED COMMAND: " + LISTEN_COMMAND);
+              LISTEN_COMMAND = "VOID";
+              ERROR();
+            }
           }
         }
       }
@@ -850,26 +974,26 @@ void setup() {
 
   // ESP NOW
   WiFi.mode(WIFI_STA);
-    
+
   if (esp_now_init() != ESP_OK) {
-      Serial.println("ESP-NOW Init Failed!");
-      return;
+    Serial.println("ESP-NOW Init Failed!");
+    return;
   }
-    
+
   esp_now_register_send_cb(OnDataSent);
   esp_now_peer_info_t peerInfo = {};
   memcpy(peerInfo.peer_addr, peerMac, 6);
-  peerInfo.channel = 0;  
+  peerInfo.channel = 0;
   peerInfo.encrypt = false;
-    
+
   if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-      Serial.println("Failed to add peer");
-      return;
+    Serial.println("Failed to add peer");
+    return;
   }
-    
+
   esp_now_register_recv_cb(OnDataRecv);
-  
-  
+
+
   // Servo
   ARM1.attach(ARM1_PIN);
   // Motor Outputs
@@ -907,13 +1031,15 @@ void setup() {
   digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
   delay(10);
   digitalWrite(LED_PIN, LOW);
+  delay(10);
   arms(0);
 
-  // OLED 
+  // OLED
   if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("failed to start SSD1306 OLED"));
-    Error();
-    while (1);
+    ERROR();
+    while (1)
+      ;
   }
   delay(2000);
   oled.setCursor(0, 0);
@@ -930,14 +1056,13 @@ void loop() {
   static unsigned long lastSendTime = 0;
 
   if (!STARTUP_CHECK_COMPLETE) {
-    if (millis() - lastSendTime > 1000) {  
+    if (millis() - lastSendTime > 1000) {
       Tell_Shout("STARTUP");
-      lastSendTime = millis(); 
+      lastSendTime = millis();
     }
     STARTUP();
-  } 
-  else {
-    Error();
+    delay(2500);
+  } else {
     Listen();
   }
   delay(10);
