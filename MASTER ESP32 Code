@@ -107,12 +107,13 @@ const int LED_PIN = 2;
 
 void STARTUP() {
   for(int count=0; count<15; count++) {
-    pinMode(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, HIGH);
     delay(250);
-    pinMode(LED_PIN, LOW);
+    digitalWrite(LED_PIN, LOW);
     delay(250);
   }
   Serial.println("READY");
+  delay(10);
 }
 
 
@@ -122,6 +123,7 @@ void STARTUP() {
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
     Serial.println(status == ESP_NOW_SEND_SUCCESS ? "MASTER> SENT SLAVE: " + PREVIOUS_COMMAND: "MASTER> FAILED TO SEND");
+    delay(10);
 }
 
 void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData, int len) {
@@ -153,12 +155,14 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
       Serial.println("MASTER> I Don't think I'm supposed to get here?");
     }
   }
+  delay(10);
 }
 
 
 void sendMessage(String msg) {
     PREVIOUS_COMMAND = msg;  // Store the message before sending
     esp_now_send(peerMac, (uint8_t *)msg.c_str(), msg.length() + 1);
+    delay(10);
 }
 
 
@@ -188,6 +192,7 @@ void Tell_Shout(String COMMAND) {
       }
     }
   }
+  delay(10);
 }
 
 // ==============================
@@ -218,6 +223,7 @@ void go_forward(double value) {
     moving = false;
     } 
   }
+  delay(10);
 }
 
 void go_back(double value) {
@@ -244,6 +250,7 @@ void go_back(double value) {
     moving = false;
     } 
   }
+  delay(10);
 }
 
 void rotate_left (double value) { // Scuffed Method Since we're not using a gyro - in degrees
@@ -270,6 +277,7 @@ void rotate_left (double value) { // Scuffed Method Since we're not using a gyro
     rotating = false;
     } 
   }
+  delay(10);
 }
 
 void rotate_right (double value) { // Scuffed Method Since we're not using a gyro - in degrees
@@ -296,7 +304,7 @@ void rotate_right (double value) { // Scuffed Method Since we're not using a gyr
     rotating = false;
     } 
   }
-  
+  delay(10);
 }
 
 void shake(int intensity, int number_of_times) {
@@ -304,14 +312,17 @@ void shake(int intensity, int number_of_times) {
     rotate_left(intensity);
     rotate_right(intensity);
   }
+  delay(10);
 }
 
 void arms(int degrees) {
   ARM1.write(degrees);
+  delay(10);
 }
 
 void arms_reset() {
   ARM1.write(0);
+  delay(10);
 }
 
 void arms_shake(int degrees, int number_of_times) {
@@ -320,6 +331,7 @@ void arms_shake(int degrees, int number_of_times) {
     delay(1000);
     ARM1.write(degrees);
   }
+  delay(10);
 }
 
 // ==============================
@@ -331,6 +343,7 @@ void DEFAULT_FACE() {
   oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
   oled.display();
+  delay(10);
 }
 
 void Blink_FACE() {
@@ -357,6 +370,7 @@ void Neutral_FACE() {
   oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
   oled.display();
+  delay(10);
 }
 
 void Happy_FACE() {
@@ -381,6 +395,7 @@ void Idle_FACE() {
   oled.drawRect(43, 18, 18, 32, WHITE);
   oled.drawRect(78, 18, 18, 32, WHITE);
   oled.display();
+  delay(10);
 }
 
 void Angry_FACE() {
@@ -439,6 +454,7 @@ void Look_Around_FACE() {
   oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
   oled.display();
+  delay(10);
 }
 
 void RPS_FACE() {
@@ -456,18 +472,21 @@ void RPS_FACE() {
   SCISSORS_FACE();
   delay(500);
   DEFAULT_FACE();
+  delay(10);
 }
 
 void ROCK_FACE() {
   oled.clearDisplay();
   //oled.drawCircle();
   oled.display();
+  delay(10);
 }
 
 void PAPER_FACE() {
   oled.clearDisplay();
   //oled.drawRect();
   oled.display();
+  delay(10);
 }
 
 void SCISSORS_FACE() {
@@ -475,6 +494,7 @@ void SCISSORS_FACE() {
   //oled.drawLine();
   //oled.drawLine();
   oled.display();
+  delay(10);
 }
 
 void BOOTING() {
@@ -482,6 +502,7 @@ void BOOTING() {
   oled.drawRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.drawRoundRect(74, 18, 18, 32, 45, WHITE);
   oled.display();
+  delay(10);
 }
 
 // ==============================
@@ -495,6 +516,7 @@ void Be_Self() {
   Idle_FACE();
   rock_paper_scissors();
   Idle_FACE();
+  delay(10);
 }
 
 void Movement_Listen() {
@@ -549,16 +571,24 @@ void Movement_Listen() {
     }
   }
   digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
+  delay(10);
   digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
+  delay(10);
   Serial.println("MASTER> Exitted Manual Mode");
   MOVEMENT_COMMAND = "VOID";
-  delay(1000);
+  delay(10);
 }
 
 int RPS_Listen() {
@@ -594,11 +624,13 @@ int RPS_Listen() {
       }
     }
   }
+  delay(10);
 }
 
 
 void playful() {
   Happy_FACE();
+  delay(10);
 }
 
 
@@ -627,6 +659,7 @@ void alone() {
   arms(25);
   delay(300);
   arms(0);
+  delay(10);
 }
 
 void Win() {
@@ -643,6 +676,7 @@ void Win() {
   arms(90);
   delay(300);
   arms(0);
+  delay(10);
 }
 
 void Lose() {
@@ -659,7 +693,7 @@ void Lose() {
   arms(45);
   delay(300);
   arms(0);
-
+  delay(10);
 }
 
 
@@ -734,6 +768,7 @@ void rock_paper_scissors() {
       }
     }
   }
+  delay(10);
 }
 
 // ==============================
@@ -744,6 +779,7 @@ void Error() {
   digitalWrite(LED_PIN, HIGH);
   delay(1000);
   digitalWrite(LED_PIN, LOW);
+  delay(10);
 }
 
 // ==============================
@@ -757,6 +793,7 @@ void Listen() {
     rotate_right(90);
     Look_Around_FACE();
     digitalWrite(2, HIGH);
+    
   }
   delay(1500);
 
@@ -791,6 +828,7 @@ void Listen() {
       }
     }
   }
+  delay(10);
 }
 
 
@@ -836,25 +874,41 @@ void setup() {
   ARM1.attach(ARM1_PIN);
   // Motor Outputs
   pinMode(FRONT_LEFT_FORWARD_PIN, OUTPUT);
+  delay(10);
   pinMode(FRONT_RIGHT_FORWARD_PIN, OUTPUT);
+  delay(10);
   pinMode(FRONT_LEFT_REVERSE_PIN, OUTPUT);
+  delay(10);
   pinMode(FRONT_RIGHT_REVERSE_PIN, OUTPUT);
+  delay(10);
   pinMode(REAR_LEFT_FORWARD_PIN, OUTPUT);
+  delay(10);
   pinMode(REAR_RIGHT_FORWARD_PIN, OUTPUT);
+  delay(10);
   pinMode(REAR_LEFT_REVERSE_PIN, OUTPUT);
+  delay(10);
   pinMode(REAR_RIGHT_REVERSE_PIN, OUTPUT);
-  
+  delay(10);
 
   digitalWrite(FRONT_LEFT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(FRONT_RIGHT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(FRONT_LEFT_REVERSE_PIN, LOW);
+  delay(10);
   digitalWrite(FRONT_RIGHT_REVERSE_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_LEFT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_RIGHT_FORWARD_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_LEFT_REVERSE_PIN, LOW);
+  delay(10);
   digitalWrite(REAR_RIGHT_REVERSE_PIN, LOW);
+  delay(10);
   digitalWrite(LED_PIN, LOW);
   arms(0);
+
   // OLED 
   if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("failed to start SSD1306 OLED"));
@@ -869,6 +923,7 @@ void setup() {
   delay(1000);
   Serial.println("ACTIVE");
   BOOTING();
+  delay(10);
 }
 
 void loop() {
@@ -882,6 +937,8 @@ void loop() {
     STARTUP();
   } 
   else {
+    Error();
     Listen();
   }
+  delay(10);
 }
