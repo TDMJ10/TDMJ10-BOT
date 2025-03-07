@@ -1,71 +1,86 @@
-// This Code is meant for testing communication this code does not have any automated inputs or outputs
-// CHANGE THE MAC ADDRESSES TO YOUR ESP's MAC ADDRESS
-
 #include <esp_now.h>
 #include <WiFi.h>
 
-uint8_t peerMac[] = {0xD4, 0x8C, 0x49, 0x58, 0x4E, 0xC0}; // ESP32 #1 MAC
-const int ledPin = 4; // LED on ESP32 #2
+//uint8_t peerMac[] = {0xD4, 0x8C, 0x49, 0x58, 0x4E, 0xC0}; // Naim's Main ESP32
+uint8_t peerMac[] = {0x34, 0x5F, 0x45, 0xAA, 0xB3, 0x64}; // 2nd ESP32
+
+const int LED_PIN = 4; // LED on ESP32 #2
 String PREVIOUS_COMMAND = "ERROR";
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-    Serial.println(status == ESP_NOW_SEND_SUCCESS ? "SLAVE> SENT MASTER: "+ PREVIOUS_COMMAND : "SLAVE> FAILED TO SEND");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "SLAVE> SENT MASTER: "+ PREVIOUS_COMMAND : "SLAVE> FAILED TO COMMUNICATE WITH MASTER");
 }
 
 void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData, int len) {
-    String COMMAND = String((char*)incomingData);
-    Serial.print("MASTER> "); Serial.println(COMMAND);
+  String COMMAND = String((char*)incomingData);
+  Serial.print("MASTER> "); Serial.println(COMMAND);
     
-    if (COMMAND == "ON") {
-        digitalWrite(ledPin, HIGH);
+  // ON AND OFF ARE EXAMPLE INPUT COMMANDS FROM THE MASTER ESP
+  // Though there is no ON or OFF triggers in the master esp code itself
+
+  if (COMMAND == "ON") {
+    COMMAND = "VOID";
+    digitalWrite(LED_PIN, HIGH);
+  }
+  else {
+    if (COMMAND == "OFF") {
+      COMMAND = "VOID";
+      digitalWrite(LED_PIN, LOW);
     }
     else {
-      if (COMMAND == "OFF") {
-        digitalWrite(ledPin, LOW);
-      }
-      else {
-        if (COMMAND == "STARTUP") {
-          sendMessage("LIVE");
-        }
+      if (COMMAND == "STARTUP") {
+        COMMAND = "VOID";
+        sendMessage("LIVE");
       }
     }
+  }
 }
 
 
 
 void sendMessage(String msg) {
-    PREVIOUS_COMMAND = msg;  // Store the message before sending
-    esp_now_send(peerMac, (uint8_t *)msg.c_str(), msg.length() + 1);
+  PREVIOUS_COMMAND = msg;  // Store the message before sending
+  esp_now_send(peerMac, (uint8_t *)msg.c_str(), msg.length() + 1);
 }
 
 void setup() {
-    Serial.begin(115200);
-    WiFi.mode(WIFI_STA);
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
     
-    if (esp_now_init() != ESP_OK) {
-        Serial.println("ESP-NOW Init Failed!");
-        return;
-    }
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("ESP-NOW Init Failed!");
+    return;
+  }
     
-    esp_now_register_send_cb(OnDataSent);
-    esp_now_peer_info_t peerInfo = {};
-    memcpy(peerInfo.peer_addr, peerMac, 6);
-    peerInfo.channel = 0;  
-    peerInfo.encrypt = false;
+  esp_now_register_send_cb(OnDataSent);
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, peerMac, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
     
-    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-        Serial.println("Failed to add peer");
-        return;
-    }
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+    Serial.println("Failed to add peer");
+    return;
+  }
     
-    esp_now_register_recv_cb(OnDataRecv);
-    pinMode(ledPin, OUTPUT);
+  esp_now_register_recv_cb(OnDataRecv);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
+  delay(100);
+  digitalWrite(LED_PIN,LOW);
+  delay(100);
+  digitalWrite(LED_PIN, HIGH);
+  delay(100);
+  digitalWrite(LED_PIN,LOW);
+  delay(100);
+  Serial.println("SLAVE> READY");
 }
 
 void loop() {
-    if (Serial.available()) {
-        String input = Serial.readStringUntil('\n');
-        input.trim();
-        sendMessage(input);
-    }
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+    sendMessage(input);
+  }
 }
+
