@@ -591,11 +591,11 @@ void ROCK_FACE() {
   oled.clearDisplay();
   drawOval(64, 36, 30, 18);
   oled.fillCircle(48, 30, 5, WHITE);
-  oled.drawCircle(48, 30, 4, BLACK);
+  oled.fillCircle(48, 30, 3, BLACK);
   oled.fillCircle(52, 43, 5, WHITE);
-  oled.drawCircle(52, 43, 4, BLACK);
+  oled.fillCircle(52, 43, 3, BLACK);
   oled.fillCircle(82, 39, 5, WHITE);
-  oled.drawCircle(82, 39, 4, BLACK);
+  oled.fillCircle(82, 39, 3, BLACK);
   oled.drawLine(64, 54, 70, 48, WHITE);
   oled.drawLine(68, 19, 56, 23, WHITE);
   oled.drawLine(62, 42, 71, 28, WHITE);
