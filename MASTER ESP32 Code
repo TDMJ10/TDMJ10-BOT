@@ -12,17 +12,20 @@
 
 
         CAUTION:
-       ---------
-        THIS CODE CAN CAUSE BLUE SCREENS OF DEATH (IQRL_NOT_LESS_OR_EQUAL) ON WINDOWS
-        DUE TO EXCESSIVE SERIAL PRINTS ON ARDUINO IDE DUE TO A BUG. (As of 3/6/25
-        CLEAR YOUR SERIAL MONITOR REGULARLY.
+        ---------
+        THIS CODE WILL CAUSE BLUE SCREENS OF DEATH (IQRL_NOT_LESS_OR_EQUAL) ON WINDOWS SYSTEMS
+        DUE TO EXCESSIVE SERIAL PRINTS ON ARDUINO IDE DUE TO A BUG. (Information As of 3/6/25)
 
-        THIS CODE IS UNTESTED ON MAC OS. IT MAY CAUSE KERNEL PANICS OR CRASHES TOO.
+        THIS CODE IS UNTESTED ON MAC OS. IT MAY CAUSE KERNEL PANICS OR SYSTEM CRASHES TOO.
+
+        CLEAR YOUR SERIAL MONITOR REGULARLY TO MAKE SURE YOU DO NOT CRASH.
+
+        WHEN ENTERING MANUAL MODE, DISCONNECTING THE ESP32 FROM YOUR COMPUTER
+        IS HIGHLY RECCOMENDED AS SERIAL PRINTS WILL COME EXTREMELY QUICKLY
 
  To do:
 ==========
 1: Fix Motor Pins When Installed Into Body
-5: Finish rock paper scissors faces
 */
 
 
@@ -80,7 +83,7 @@ Servo ARM1;
 #define SCREEN_ADDRESS 0x3C
 Adafruit_SSD1306 oled(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-// ESP NOW COMMUNICATION
+// ESP NOW COMMUNICATION (TO SLAVE)
 //uint8_t peerMac[] = { 0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C };  // Placeholder for Naim's Main ESP32 CAM
 uint8_t peerMac[] = { 0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C };  // Naim's Testing ESP32 CAM
 
@@ -117,6 +120,19 @@ const int LED_PIN = 2;
 // Convinience Stuff
 // ==============================
 
+void FAST_BLINK() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(250);
+  digitalWrite(LED_PIN, LOW);
+  delay(10);
+}
+
+void BLINK() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(1000);
+  digitalWrite(LED_PIN, LOW);
+  delay(10);
+}
 
 void STARTUP() {
   digitalWrite(LED_PIN, HIGH);
@@ -125,6 +141,30 @@ void STARTUP() {
   delay(250);
   Serial.println(String(LOG_NO++) + "| MASTER> READY TO COMMUNICATE");
   delay(10);
+}
+
+void drawOval(int x0, int y0, int a, int b) {
+  for (int x = -a; x <= a; x++) {
+    int y = round(sqrt(b * b * (1 - (x * x) / (float)(a * a))));
+    oled.drawPixel(x0 + x, y0 + y, WHITE);
+    oled.drawPixel(x0 + x, y0 - y, WHITE);
+  }
+  
+  for (int y = -b; y <= b; y++) {
+    int x = round(sqrt(a * a * (1 - (y * y) / (float)(b * b))));
+    oled.drawPixel(x0 + x, y0 + y, WHITE);
+    oled.drawPixel(x0 - x, y0 + y, WHITE);
+  }
+}
+
+void fillOval(int x0, int y0, int a, int b) {
+  for (int x = -a; x <= a; x++) {
+    for (int y = -b; y <= b; y++) {
+      if ((x * x * b * b + y * y * a * a) <= (a * a * b * b)) {
+        oled.drawPixel(x0 + x, y0 + y, WHITE);
+      }
+    }
+  }
 }
 
 
@@ -160,6 +200,8 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
           }
           else {
             Serial.println(String(LOG_NO++) + "| MASTER> ERROR: NOT MOVEMENT, RPSING OR LISTENING");
+            ERROR_INVERSE();
+            ERROR();
           } 
         }
       }
@@ -185,6 +227,7 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
           }
           else {
             Serial.println(String(LOG_NO++) + "| MASTER> ERROR: NOT MOVEMENT, RPSING OR LISTENING");
+            ERROR();
           } 
         }
       }
@@ -195,7 +238,8 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
       Serial.println(String(LOG_NO++) + "| SLAVE> " + COMMAND);
       STARTUP_CHECK_COMPLETE = true;
       Serial.println(String(LOG_NO++) + "| MASTER> SLAVE READY");
-    } else {
+    } 
+    else {
       Serial.println(String(LOG_NO++) + "| MASTER> I Don't think I'm supposed to get here?");
     }
   }
@@ -229,6 +273,7 @@ void Tell_Shout(String TS_COMMAND) {
         } 
         else {
           Serial.println(String(LOG_NO++) + "| MASTER> TELL SHOUT ERROR UNRECOGNISED COMMAND: " + TS_COMMAND);
+          ERROR();
         }
       }
     }
@@ -405,12 +450,6 @@ void Neutral_FACE() {
   oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
   oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
   oled.display();
-  delay(2500);
-  Blink_FACE();
-  oled.clearDisplay();
-  oled.fillRoundRect(38, 18, 18, 32, 45, WHITE);
-  oled.fillRoundRect(74, 18, 18, 32, 45, WHITE);
-  oled.display();
   delay(10);
 }
 
@@ -550,22 +589,43 @@ void RPS_FACE() {
 
 void ROCK_FACE() {
   oled.clearDisplay();
-  //oled.drawCircle();
+  drawOval(64, 36, 30, 18);
+  oled.fillCircle(48, 30, 5, WHITE);
+  oled.drawCircle(48, 30, 4, BLACK);
+  oled.fillCircle(52, 43, 5, WHITE);
+  oled.drawCircle(52, 43, 4, BLACK);
+  oled.fillCircle(82, 39, 5, WHITE);
+  oled.drawCircle(82, 39, 4, BLACK);
+  oled.drawLine(64, 54, 70, 48, WHITE);
+  oled.drawLine(68, 19, 56, 23, WHITE);
+  oled.drawLine(62, 42, 71, 28, WHITE);
   oled.display();
   delay(10);
 }
 
 void PAPER_FACE() {
   oled.clearDisplay();
-  //oled.drawRect();
+  oled.drawRect(35, 18, 58, 37, WHITE);
+  oled.drawLine(46, 30, 80, 30, WHITE);
+  oled.drawLine(46, 42, 80, 42, WHITE);
+  oled.drawLine(83, 18, 92, 27, WHITE);
+  oled.drawLine(83, 18, 92, 18, BLACK);
+  oled.drawLine(92, 18, 92, 27, BLACK);
+  oled.drawLine(83, 18, 83, 27, WHITE);
+  oled.drawLine(83, 27, 92, 27, WHITE);
   oled.display();
   delay(10);
 }
 
 void SCISSORS_FACE() {
   oled.clearDisplay();
-  //oled.drawLine();
-  //oled.drawLine();
+  oled.drawCircle(64, 44, 4, WHITE);
+  oled.drawLine(57, 18, 62, 40, WHITE);
+  oled.drawLine(71, 18, 66, 40, WHITE);
+  oled.drawCircle(56, 52, 8, WHITE);
+  oled.drawCircle(56, 52, 7, WHITE);
+  oled.drawCircle(72, 52, 8, WHITE);
+  oled.drawCircle(72, 52, 7, WHITE);
   oled.display();
   delay(10);
 }
@@ -576,6 +636,13 @@ void BOOTING() {
   oled.drawRect(78, 18, 18, 32, WHITE);
   oled.display();
   delay(10);
+}
+
+void MANUAL_FACE() {
+  oled.clearDisplay();
+  oled.drawRoundRect(38, 18, 18, 32, 45, WHITE);
+  oled.drawRoundRect(74, 18, 18, 32, 45, WHITE);
+  oled.display();
 }
 
 // ==============================
@@ -592,32 +659,38 @@ void BE_SELF() {
 
 void Movement_Listen() {
 
+  MANUAL_FACE();
   MOVING = true;
   Serial.println(String(LOG_NO++) + "| MASTER> MANUAL ACTIVE");
   while (MOVING) {
     Tell_Shout("REQUEST: MOVEMENT");
 
     if (MOVEMENT_COMMAND.equals("MANUAL_OFF")) {
+      FAST_BLINK();
       MOVING = false;
       MOVEMENT_COMMAND.equals("VOID");
       break;
     } else {
       if (MOVEMENT_COMMAND.equals("FORWARD")) {
+        FAST_BLINK();
         Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Going Forward");
         go_forward(0.25);
         MOVEMENT_COMMAND = "VOID";
       } else {
         if (MOVEMENT_COMMAND.equals("REVERSE")) {
+          FAST_BLINK();
           Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Going Back");
           go_back(0.25);
           MOVEMENT_COMMAND = "VOID";
         } else {
           if (MOVEMENT_COMMAND.equals("LEFT")) {
+            FAST_BLINK();
             Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Turning Left");
             rotate_left(45);
             MOVEMENT_COMMAND = "VOID";
           } else {
             if (MOVEMENT_COMMAND.equals("RIGHT")) {
+              FAST_BLINK();
               Serial.println(String(LOG_NO++) + "| MASTER> MOVEMENT_LISTEN: Turning Right");
               rotate_right(45);
               MOVEMENT_COMMAND = "VOID";
@@ -655,6 +728,7 @@ void Movement_Listen() {
   Serial.println(String(LOG_NO++) + "| MASTER> MANUAL DISENGAGED");
   MOVEMENT_COMMAND = "VOID";
   delay(10);
+  DEFAULT_FACE();
 }
 
 int RPS_Listen() {
@@ -677,6 +751,7 @@ int RPS_Listen() {
         } else {
           if (RPS_COMMAND.equals("VOID")) {
             Serial.println(String(LOG_NO++) + "| MASTER> RPS_LISTEN> NO COMMAND");
+            RPS_LISTEN_ATTEMPTS++;
           } else {
             Serial.println(String(LOG_NO++) + "| MASTER> RPS_LISTEN> UNRECOGNIZED COMMAND: " + RPS_COMMAND);
             RPS_COMMAND = "VOID";
@@ -777,15 +852,15 @@ void Win() {
 void Lose() {
   Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT Lost...");
   Angry_FACE();
-  arms(30);
+  arms(90);
   delay(500);
   arms(0);
   delay(500);
-  arms(30);
+  arms(90);
   delay(500);
   arms(0);
   delay(500);
-  arms(30);
+  arms(90);
   delay(500);
   arms(0);
   delay(1000);
@@ -803,25 +878,35 @@ void RPS() {
   RPSING = true;
 
   while (RPSING) {
-    delay(3000);
+    delay(1000);
+    ROCK_FACE();
     arms(90);
     delay(350);
+    PAPER_FACE();
     arms(45);
     delay(350);
+    SCISSORS_FACE();
     arms(90);
     delay(350);
+    ROCK_FACE();
     arms(45);
     delay(350);
+    PAPER_FACE();
     arms(90);
     delay(350);
+    SCISSORS_FACE();
     arms(0);
+    delay(350);
+    DEFAULT_FACE();
+    delay(1000);
     PLAYER_PICK = RPS_Listen();
     BOT_PICK = random(1, 4);
 
-    if (BOT_PICK == PLAYER_PICK || PLAYER_PICK == 0) {
+    if (PLAYER_PICK == 0) {
       Angry_FACE();
       delay(3000);
       DEFAULT_FACE();
+      ERROR();
     } else {
       if (BOT_PICK == 1 && PLAYER_PICK == 3) {  // BOT ROCK, PLAYER SCISSORS
         ROCK_FACE();
@@ -842,22 +927,70 @@ void RPS() {
             RPSING = false;
           } else {
             if (BOT_PICK == 1) {
-              ROCK_FACE();
-              delay(1000);
-              Lose();
-              RPSING = false;
-            } else {
-              if (BOT_PICK == 2) {
-                PAPER_FACE();
+              if(BOT_PICK == PLAYER_PICK) {
+                ROCK_FACE();
                 delay(1000);
+                Angry_FACE();
+                delay(750);
+                arms(20);
+                delay(750);
+                arms(0);
+                delay(750);
+                arms(20);
+                delay(750);
+                arms(0);
+                DEFAULT_FACE();
+              }
+              else {
+                ROCK_FACE();
+                delay(2000);
                 Lose();
                 RPSING = false;
-              } else {
-                if (BOT_PICK == 3) {
-                  SCISSORS_FACE();
+              }
+            } else {
+              if (BOT_PICK == 2) {
+                if(BOT_PICK == PLAYER_PICK) {
+                  PAPER_FACE();
                   delay(1000);
+                  Angry_FACE();
+                  delay(750);
+                  arms(20);
+                  delay(750);
+                  arms(0);
+                  delay(750);
+                  arms(20);
+                  delay(750);
+                  arms(0);
+                  DEFAULT_FACE();
+                }
+                else {
+                  PAPER_FACE();
+                  delay(2000);
                   Lose();
                   RPSING = false;
+                }
+              } else {
+                if (BOT_PICK == 3) {
+                  if(BOT_PICK == PLAYER_PICK) {
+                    SCISSORS_FACE();
+                    delay(1000);
+                    Angry_FACE();
+                    delay(750);
+                    arms(20);
+                    delay(750);
+                    arms(0);
+                    delay(750);
+                    arms(20);
+                    delay(750);
+                    arms(0);
+                    DEFAULT_FACE();
+                  }
+                  else {
+                    SCISSORS_FACE();
+                    delay(2000);
+                    Lose();
+                    RPSING = false;
+                  }
                 }
               }
             }
@@ -874,6 +1007,7 @@ void RPS() {
 // ==============================
 
 void ERROR() {
+  Serial.println(String(LOG_NO++) + "| MASTER> ERROR");
   delay(10);
   digitalWrite(LED_PIN, HIGH);
   delay(1000);
@@ -897,6 +1031,7 @@ void Listen() {
   LISTENING = true;
   TURNING_AROUND = true;
   bool LISTEN_FORCE_THROUGH = false;
+  digitalWrite(LED_PIN, HIGH);
   for (int count = 0; count < 4; count++) {
     if (LISTEN_COMMAND.equals("OVERRIDE") || LISTEN_COMMAND.equals("ALONE") || LISTEN_COMMAND.equals("BE_SELF") || LISTEN_COMMAND.equals("MANUAL_ON") || LISTEN_COMMAND.equals("RPS")){
       LISTEN_FORCE_THROUGH = true;
@@ -904,7 +1039,6 @@ void Listen() {
     }
     rotate_right(90);
     Look_Around_FACE();
-    digitalWrite(LED_PIN, HIGH);
     delay(10);
   }
   digitalWrite(LED_PIN, LOW);
@@ -944,9 +1078,15 @@ void Listen() {
           else {
             if (LISTEN_COMMAND.equals("VOID")) {
               Serial.println(String(LOG_NO++) + "| MASTER> LISTEN> NO COMMAND RECEIVED");
+              Alone();
+              Neutral_FACE();
+              Look_Around_FACE();
+              Neutral_FACE();
+              Alone();
             } else {
               Serial.println(String(LOG_NO++) + "| MASTER> LISTEN: UNRECOGNISED COMMAND: " + LISTEN_COMMAND);
               LISTEN_COMMAND = "VOID";
+              ERROR_INVERSE();
               ERROR();
             }
           }
@@ -970,6 +1110,9 @@ void Listen() {
 void setup() {
   // Serial
   Serial.begin(115200);
+  Serial.println("=============================================================");
+  Serial.println("Made By Naim Iftekhar Rahman (24201190) BRACU ROBU TEAM I-NPC");
+  Serial.println("=============================================================");
 
   // ERROR LED
   pinMode(LED_PIN, OUTPUT);
@@ -1066,7 +1209,7 @@ void loop() {
     
     delay(2500);
   } else {
-    DEFAULT_FACE();
+    DEFAULT_FACE(); 
     delay(10);
     Listen();
   }
