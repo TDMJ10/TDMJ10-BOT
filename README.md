@@ -19,25 +19,30 @@ BRAC University ROBU BOR PROJECT FALL 2024
 
 # Hardware Components:
 
-1 ESP32 WROOM32 30P CH340C DEV BOARD USB-C
+1 ESP32 WROOM32 30P CH340C DEV BOARD USB-C - 550Tk
 
-1 ESP32S CAM AI Thinker
+1 ESP32S CAM AI Thinker - 600Tk
 
-1 ESP32 30P Expansion Board
+1 ESP32 30P Expansion Board - 450Tk
 
-1 ESP32 CAM AI Thinker Programmer Module
+1 ESP32 CAM AI Thinker Programmer Module - 200Tk
 
-1 SG90 Servo
+1 SG90 Servo - 135Tk
 
-2 L293D Motor Drivers
+1 DC Jack - 15Tk
 
-2 18650 3.7V (X3) Battery Casings
+2 L293D (Mini Shield) Motor Drivers - 2 X 215Tk
 
-4 Gear Motors
+2 18650 3.7V (X3) Battery Casings - 2 X 75Tk
 
-6 18650 3.7V Batteries
+4 N20 Gear Motors 4 X 190Tk
+
+6 18650 3.7V Batteries 6 X 80Tk
 
 And Lots of Jumper Wires
+
+
+Estimated Cost of Entire Project: (Assuming 30 Jumper Wires) 3830Tk
 
 # Software Components:
 
