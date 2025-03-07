@@ -836,30 +836,34 @@ void Win() {
   Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT Won!");
   Happy_FACE();
   arms(90);
-  delay(300);
+  Happy_FACE();
   arms(0);
-  delay(300);
+  Happy_FACE();
   arms(90);
-  delay(300);
+  Happy_FACE();
   arms(0);
-  delay(300);
+  Happy_FACE();
   arms(90);
-  delay(300);
+  Happy_FACE();
   arms(0);
   delay(1000);
 }
 
 void Lose() {
   Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT Lost...");
-  Angry_FACE();
+  Sad_FACE_1();
   arms(90);
   delay(500);
+  Sad_FACE_2();
   arms(0);
   delay(500);
+  Sad_FACE_3();
   arms(90);
   delay(500);
+  Sad_FACE_4();
   arms(0);
   delay(500);
+  Sad_FACE_5();
   arms(90);
   delay(500);
   arms(0);
