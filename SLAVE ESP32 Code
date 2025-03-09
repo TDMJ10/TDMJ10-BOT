@@ -1,0 +1,130 @@
+#include <esp_now.h>
+#include <WiFi.h>
+
+//uint8_t peerMac[] = {0xD4, 0x8C, 0x49, 0x58, 0x4E, 0xC0}; // Naim's Main ESP32 30P
+uint8_t peerMac[] = {0x34, 0x5F, 0x45, 0xAA, 0xB3, 0x64}; // 2nd ESP32 30P (the one currently on the main body)
+
+const int LED_PIN = 4; // LED on ESP32 CAM
+String PREVIOUS_COMMAND = "ERROR";
+
+int LOG_NO = 1;
+
+void ERROR() {
+  delay(10);
+  for(int count=0; count<3; count++) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_PIN, LOW);
+    delay(1000);
+  }
+}
+
+
+bool Scan_Area() {
+  bool Found_People = false;
+  
+  //Put your scanning code here (make sure its people!)
+  delay(10);
+  return Found_People; // true = Theres recognized people, false = the bot is unfamiliar with people or sees no one
+}
+
+String Scan_RPS() {
+
+  //Put your scannign code here (make sure its rock paper scissors!)
+
+  delay(10);
+  //return "ROCK"
+  //return "PAPER"
+  //return "SCISSORS"
+}
+
+void RESPONSE_ACTIONS(String COMMAND) {
+  if(COMMAND.equals("STARTUP")) {
+    sendMessage("LIVE");
+    digitalWrite(LED_PIN, HIGH);
+    delay(100);
+    digitalWrite(LED_PIN,LOW);
+    delay(100);
+    digitalWrite(LED_PIN, HIGH);
+    delay(100);
+    digitalWrite(LED_PIN,LOW);
+    delay(100);
+  }
+  else {
+    if(COMMAND.equals("LISTENING")) {
+      if(Scan_Area()) {
+        sendMessage("BE_SELF");
+      }
+      else {
+        sendMessage("ALONE");
+      }
+    }
+    else {
+      if(COMMAND.equals("RPS")) {
+        sendMessage(Scan_RPS());
+      }
+      else {
+        if(COMMAND.equals("MOVEMENT")) {
+          Serial.println("Well this is awkward this is a manual input bruhh");
+        }
+        else {
+          Serial.println(String(LOG_NO++) + "| SLAVE> UNRECOGNIZED COMMAND: " + COMMAND);
+        }
+      }
+    }
+  }
+}
+
+
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? String(LOG_NO++) + "| SLAVE> SENT MASTER: "+ PREVIOUS_COMMAND : "SLAVE> FAILED TO COMMUNICATE WITH MASTER");
+}
+
+void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData, int len) {
+  String COMMAND = String((char*)incomingData);
+  Serial.print(String(LOG_NO++) + "| MASTER> "); Serial.println(COMMAND);
+  RESPONSE_ACTIONS(COMMAND);
+}
+
+
+
+void sendMessage(String msg) {
+  PREVIOUS_COMMAND = msg;  // Store the message before sending
+  esp_now_send(peerMac, (uint8_t *)msg.c_str(), msg.length() + 1);
+}
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+    
+  if (esp_now_init() != ESP_OK) {
+    Serial.println(String(LOG_NO++) + "| SLAVE> ESP-NOW Init Failed!");
+    return;
+  }
+    
+  esp_now_register_send_cb(OnDataSent);
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, peerMac, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+    
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+    Serial.println(String(LOG_NO++) + "| SLAVE> Failed to add peer");
+    ERROR();
+    return;
+  }
+    
+  esp_now_register_recv_cb(OnDataRecv);
+  pinMode(LED_PIN, OUTPUT);
+  Serial.println(String(LOG_NO++) + "| SLAVE> READY");
+  delay(10);
+}
+
+void loop() {
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+    sendMessage(input);
+  }
+}
+
