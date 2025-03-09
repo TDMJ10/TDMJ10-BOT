@@ -127,10 +127,24 @@ void FAST_BLINK() {
   delay(10);
 }
 
+void FAST_BLINK_INVERSE() {
+  digitalWrite(LED_PIN, LOW);
+  delay(250);
+  digitalWrite(LED_PIN, HIGH);
+  delay(10);
+}
+
 void BLINK() {
   digitalWrite(LED_PIN, HIGH);
   delay(1000);
   digitalWrite(LED_PIN, LOW);
+  delay(10);
+}
+
+void BLINK_INVERSE() {
+  digitalWrite(LED_PIN, LOW);
+  delay(1000);
+  digitalWrite(LED_PIN, HIGH);
   delay(10);
 }
 
@@ -207,7 +221,7 @@ void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData
       }
     }
     else {
-      ERROR_INVERSE();
+      BLINK_INVERSE();
       if (MOVING) {
         MOVEMENT_COMMAND = COMMAND;
         Serial.print(String(LOG_NO++) + "| SLAVE> MOVING> ");
@@ -602,11 +616,11 @@ void ROCK_FACE() {
   oled.clearDisplay();
   drawOval(64, 36, 30, 18);
   oled.fillCircle(48, 30, 5, WHITE);
-  oled.fillCircle(48, 30, 3, BLACK);
+  oled.fillCircle(48, 30, 4, BLACK);
   oled.fillCircle(52, 43, 5, WHITE);
-  oled.fillCircle(52, 43, 3, BLACK);
+  oled.fillCircle(52, 43, 4, BLACK);
   oled.fillCircle(82, 39, 5, WHITE);
-  oled.fillCircle(82, 39, 3, BLACK);
+  oled.fillCircle(82, 39, 4, BLACK);
   oled.drawLine(64, 54, 70, 48, WHITE);
   oled.drawLine(68, 19, 56, 23, WHITE);
   oled.drawLine(62, 42, 71, 28, WHITE);
@@ -656,6 +670,15 @@ void MANUAL_FACE() {
   oled.display();
 }
 
+void Question_FACE() {
+  oled.clearDisplay();
+  oled.drawCircle(64, 30, 8, WHITE);
+  oled.drawLine(64, 38, 64, 50, WHITE);
+//  oled.drawRect(PLACEHOLDER):
+  oled.drawCircle(64, 54, 4, WHITE);
+  oled.display();
+}
+
 // ==============================
 // Behaviours
 // ==============================
@@ -672,7 +695,7 @@ void Movement_Listen() {
 
   MANUAL_FACE();
   MOVING = true;
-  Serial.println(String(LOG_NO++) + "| MASTER> MANUAL ACTIVE");
+  Serial.println(String(LOG_NO++) + "| MASTER> MANUAL ENGAGED");
   while (MOVING) {
     Tell_Shout("MOVEMENT");
 
@@ -779,7 +802,7 @@ int RPS_Listen() {
 }
 
 void WANT_RPS() {
-  for(int You_Looked_This_Deep_Damn=0; You_Looked_This_Deep_Damn<3; You_Looked_This_Deep_Damn++) {
+  for(int You_Looked_This_Deep_Damn=0; You_Looked_This_Deep_Damn<4; You_Looked_This_Deep_Damn++) {
     ROCK_FACE();
     delay(250);
     PAPER_FACE();
@@ -788,13 +811,16 @@ void WANT_RPS() {
     delay(250);
   }
   Question_FACE();
+  delay(3000);
 }
 
 void Playful() {
   Joy_FACE();
   arms(45);
+  go_forward(0.25);
   rotate_left(10);
   delay(300);
+  go_back(0.25);
   rotate_right(10);
   DEFAULT_FACE();
   delay(100);
@@ -803,8 +829,10 @@ void Playful() {
   delay(300);
   Joy_FACE();
   arms(45);
+  go_forward(0.25);
   rotate_right(10);
   delay(300);
+  go_back(0.25);
   rotate_left(10);
   DEFAULT_FACE();
   delay(100);
@@ -817,9 +845,10 @@ void Playful() {
   arms(45);
   delay(300);
   arms(0);
-  Joy_FACE();
-  delay(2500);
+  Happy_FACE();
+  delay(10);
   DEFAULT_FACE();
+  delay(10);
 }
 
 
@@ -1062,6 +1091,7 @@ void ERROR() {
 }
 
 void ERROR_INVERSE() {
+  Serial.println(String(LOG_NO++) + "| MASTER> ERROR");
   delay(10);
   digitalWrite(LED_PIN, LOW);
   delay(1000);
