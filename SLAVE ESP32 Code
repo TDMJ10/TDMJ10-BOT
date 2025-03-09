@@ -121,6 +121,8 @@ void setup() {
 }
 
 void loop() {
+
+  // You can remove this but i'd rather you didn't
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');
     input.trim();
