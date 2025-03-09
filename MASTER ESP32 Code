@@ -393,10 +393,12 @@ void rotate_right(double value) {  // Scuffed Method Since we're not using a gyr
   delay(10);
 }
 
-void shake(int intensity, int number_of_times) {
+void Shake(int intensity, int number_of_times) {
   for (int count = 0; count < number_of_times; count++) {
     rotate_left(intensity);
+    delay(100);
     rotate_right(intensity);
+    delay(100);
   }
   delay(10);
 }
@@ -467,7 +469,16 @@ void Happy_FACE() {
   oled.fillRoundRect(31, 26, 29, 15, 45, BLACK);
   oled.fillRoundRect(67, 26, 29, 15, 45, BLACK);
   oled.display();
-  delay(350);
+  delay(10);
+}
+
+void Joy_FACE() {
+  oled.clearDisplay();
+  oled.fillRoundRect(29, 21, 34, 15, 45, WHITE);
+  oled.fillRoundRect(65, 21, 34, 15, 45, WHITE);
+  oled.fillRoundRect(32, 24, 29, 15, 45, BLACK);
+  oled.fillRoundRect(68, 24, 29, 15, 45, BLACK);
+  oled.display();
 }
 
 void Angry_FACE() {
@@ -663,7 +674,7 @@ void Movement_Listen() {
   MOVING = true;
   Serial.println(String(LOG_NO++) + "| MASTER> MANUAL ACTIVE");
   while (MOVING) {
-    Tell_Shout("REQUEST: MOVEMENT");
+    Tell_Shout("MOVEMENT");
 
     if (MOVEMENT_COMMAND.equals("MANUAL_OFF")) {
       FAST_BLINK();
@@ -767,26 +778,47 @@ int RPS_Listen() {
   delay(10);
 }
 
+void WANT_RPS() {
+  for(int You_Looked_This_Deep_Damn=0; You_Looked_This_Deep_Damn<3; You_Looked_This_Deep_Damn++) {
+    ROCK_FACE();
+    delay(250);
+    PAPER_FACE();
+    delay(250);
+    SCISSORS_FACE();
+    delay(250);
+  }
+  Question_FACE();
+}
 
 void Playful() {
-  Happy_FACE();
+  Joy_FACE();
   arms(45);
+  rotate_left(10);
   delay(300);
-  Happy_FACE();
+  rotate_right(10);
+  DEFAULT_FACE();
+  delay(100);
+  Joy_FACE();
   arms(0);
   delay(300);
-  Happy_FACE();
+  Joy_FACE();
   arms(45);
+  rotate_right(10);
   delay(300);
-  Happy_FACE();
+  rotate_left(10);
+  DEFAULT_FACE();
+  delay(100);
+  Joy_FACE();
   arms(0);
   delay(300);
-  Happy_FACE();
+  DEFAULT_FACE();
+  delay(750);
+  WANT_RPS();
   arms(45);
   delay(300);
-  Happy_FACE();
   arms(0);
-  delay(300);
+  Joy_FACE();
+  delay(2500);
   DEFAULT_FACE();
 }
 
@@ -905,6 +937,16 @@ void RPS() {
     delay(1000);
     PLAYER_PICK = RPS_Listen();
     BOT_PICK = random(1, 4);
+
+    if(BOT_PICK==1) {
+      Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT got ROCK");
+    }
+    if(BOT_PICK==2) {
+      Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT got PAPER");
+    }
+    if(BOT_PICK==3) {
+      Serial.println(String(LOG_NO++) + "| MASTER> RPS> BOT got SCISSORS");
+    }
 
     if (PLAYER_PICK == 0) {
       Angry_FACE();
@@ -1036,6 +1078,7 @@ void Listen() {
   TURNING_AROUND = true;
   bool LISTEN_FORCE_THROUGH = false;
   digitalWrite(LED_PIN, HIGH);
+  Serial.println(String(LOG_NO++) + "| MASTER> LISTEN> LOOKING AROUND");
   for (int count = 0; count < 4; count++) {
     if (LISTEN_COMMAND.equals("OVERRIDE") || LISTEN_COMMAND.equals("ALONE") || LISTEN_COMMAND.equals("BE_SELF") || LISTEN_COMMAND.equals("MANUAL_ON") || LISTEN_COMMAND.equals("RPS")){
       LISTEN_FORCE_THROUGH = true;
@@ -1085,6 +1128,7 @@ void Listen() {
               Alone();
               Neutral_FACE();
               Look_Around_FACE();
+              Shake(10, 3);
               Neutral_FACE();
               Alone();
             } else {
