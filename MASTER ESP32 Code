@@ -1,20 +1,20 @@
 /*
+
+  ROBU FALL 2024 BOR PROJECT
+  TEAM I-NPC
+
   Written by Naim Iftekhar Rahman (TDMJ10)
   tdmj10@gmail.com
   naimiftekharrahman@gmail.com
   naim.iftekhar.rahman@g.bracu.ac.bd
-  +8801993537189
   Student of Bangldesh BRAC University (24201190)
-  ROBU FALL 2024 BOR PROJECT
-  TEAM I-NPC
-
-
-
+  
 
         CAUTION:
         ---------
         THIS CODE WILL CAUSE BLUE SCREENS OF DEATH (IQRL_NOT_LESS_OR_EQUAL) ON WINDOWS SYSTEMS
-        DUE TO EXCESSIVE SERIAL PRINTS ON ARDUINO IDE DUE TO A BUG. (Information As of 3/6/25)
+        DUE TO EXCESSIVE SERIAL PRINTS ON ARDUINO IDE DUE TO A BUG.
+        (Arduino 2.3.4 As of 3/6/25)
 
         THIS CODE IS UNTESTED ON MAC OS. IT MAY CAUSE KERNEL PANICS OR SYSTEM CRASHES TOO.
 
@@ -23,9 +23,11 @@
         WHEN ENTERING MANUAL MODE, DISCONNECTING THE ESP32 FROM YOUR COMPUTER
         IS HIGHLY RECCOMENDED AS SERIAL PRINTS WILL COME EXTREMELY QUICKLY
 
+
  To do:
 ==========
 1: Fix Motor Pins When Installed Into Body
+2: 
 */
 
 
@@ -674,7 +676,7 @@ void Question_FACE() {
   oled.clearDisplay();
   oled.drawCircle(64, 30, 8, WHITE);
   oled.drawLine(64, 38, 64, 50, WHITE);
-//  oled.drawRect(PLACEHOLDER):
+  oled.drawRect(0, 31, 62,34, WHITE);
   oled.drawCircle(64, 54, 4, WHITE);
   oled.display();
 }
