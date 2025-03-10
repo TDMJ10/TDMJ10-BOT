@@ -1,1 +1,74 @@
+TELLSHOUT
+-----------
+Command Verification then broadcasts to slave
 
+MASTER BOOTUP BROADCAST:  STARTUP: Checks if Slave is active ( EXPECTS: "LIVE" )
+MASTER LISTEN BROADCAST:  LISTENING: Expects response for BEHAVIOUR ( EXPECTS: "ALONE" "BE_SELF" "RPS" "MANUAL_ON" )
+MASTER RPS BROADCAST:  RPS: Expects response for ROCK PAPER SCISSORS ( EXPECTS: RPS: "ROCK" "PAPER" "SCISSORS" )
+MASTER MOVEMENT BROADCAST:  MOVEMENT: Expects response for MOVEMENT ( EXPECTS: "FORWARD" "REVERSE" "LEFT" "RIGHT" "MANUAL_OFF" )
+
+ONDATASENT
+-----------
+(well not much its just what tellshout is but just without the verification part) ( Literally sendMessage() )
+records command into Serial Log
+
+ONDATARECV
+-----------
+Actual Communicator Between The ESPs
+
+First confirms "LIVE" Message from slave to confirm slave is active (-Response to TELLSHOUT: STARTUP) then allows general
+bot activity (STARTUP_CHECK_COMPLETE) then confirms active actions (MOVING or RPSING or LISTENING)
+
+MASTER BOOLEAN:  MOVING: Shifts data received command to Movement_Listen Function Verification (MOVEMENT_COMMAND)
+MASTER BOOLEAN:  RPSING: Shifts data received command to RPS_Listen Function Verification (RPS_COMMAND)
+MASTER BOOLEAN:  LISTENING: Shifts data received command to Listen Function Verification where MOVING RPSING can be
+                            activated through MANUAL_ON or RPS Respectively or Own Behaviours
+
+
+
+LISTEN		-- TELLSHOUT: LISTENING
+-------
+Default Loop Function after STARTUP_CHECK_COMPLETE is true
+Performs area scan (unless overridden)
+Gets Behaviourial commands from the slave  ( -Response to TELLSHOUT: LISTENING)
+
+MASTER LISTEN_COMMAND ELIMINATION:  VOID: BLANK COMMAND
+SLAVE BROADCAST TO MASTER LISTEN_COMMAND:  OVERRIDE: FORCES NEXT COMMAND SENT CANCELLING ALL BEHAVIOUR TEMPORARILY
+
+Responses:
+=====================
+SLAVE BROADCAST TO MASTER LISTEN_COMMAND:  RPS: Triggers rock paper scissors 
+SLAVE BROADCAST TO MASTER LISTEN_COMMAND:  MANUAL_ON: Triggers manual movement commands
+SLAVE TELLSHOUT RESPONSE TO MASTER LISTEN_COMMAND:  ALONE: Triggers self behaviour call when recognising no people: Alone()
+SLAVE TELLSHOUT RESPONSE TO MASTER LISTEN_COMMAND:  BE_SELF: Triggers self behvaiour call when recognising people: BE_SELF()
+
+
+
+RPS_LISTEN 		-- TELLSHOUT: RPS
+------------
+Triggered by Listen() - RPS
+
+Triggers RPS Verification function with gameplay functions
+
+Responses:
+=====================
+SLAVE TELLSHOUT RESPONSE TO MASTER RPS_COMMAND:  ROCK
+SLAVE TELLSHOUT RESPONSE TO MASTER RPS_COMMAND:  PAPER
+SLAVE TELLSHOUT RESPONSE TO MASTER RPS_COMMAND:  SCISSORS
+
+
+
+MOVEMENT_LISTEN			-- TELLSHOUT: MOVEMENT
+-----------------
+Triggered by Listen() - MANUAL_ON
+
+Triggers Movement Verification Function with manual inputs expected. TELLSHOUT: MOVEMENT is only to show when the
+master is ready for another movement command
+
+Commands:
+============
+SLAVE BROADCAST TO MASTER MOVEMENT_COMMAND: FORWARD
+SLAVE BROADCAST TO MASTER MOVEMENT_COMMAND: LEFT
+SLAVE BROADCAST TO MASTER MOVEMENT_COMMAND: RIGHT
+SLAVE BROADCAST TO MASTER MOVEMENT_COMMAND: REVERSE
+SLAVE BROADCAST TO MASTER MOVEMENT_COMMAND: MANUAL_OFF: turns manual mode off
