@@ -1,1 +1,63 @@
+#include <esp_now.h>
+#include <WiFi.h>
+
+String PREVIOUS_COMMAND = "ERROR";
+
+uint8_t peerMac[] = {0x94, 0x54, 0xC5, 0xB5, 0xC6, 0x8C}; // ESP32 #2 MAC
+const int ledPin = 2; // LED on ESP32 #1
+
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+    Serial.println(status == ESP_NOW_SEND_SUCCESS ? "MASTER> SENT SLAVE: " + PREVIOUS_COMMAND: "MASTER> FAILED TO SEND");
+}
+
+void OnDataRecv(const esp_now_recv_info_t *recvInfo, const uint8_t *incomingData, int len) {
+    String COMMAND = String((char*)incomingData);
+    Serial.print("SLAVE> "); Serial.println(COMMAND);
+    
+    if (COMMAND == "ON") {
+        digitalWrite(ledPin, HIGH);
+    } else if (COMMAND == "OFF") {
+        digitalWrite(ledPin, LOW);
+    }
+}
+
+
+void sendMessage(String msg) {
+    PREVIOUS_COMMAND = msg;  // Store the message before sending
+    esp_now_send(peerMac, (uint8_t *)msg.c_str(), msg.length() + 1);
+}
+
+void setup() {
+    Serial.begin(115200);
+    WiFi.mode(WIFI_STA);
+    
+    if (esp_now_init() != ESP_OK) {
+        Serial.println("ESP-NOW Init Failed!");
+        return;
+    }
+    
+    esp_now_register_send_cb(OnDataSent);
+    esp_now_peer_info_t peerInfo = {};
+    memcpy(peerInfo.peer_addr, peerMac, 6);
+    peerInfo.channel = 0;  
+    peerInfo.encrypt = false;
+    
+    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+        Serial.println("Failed to add peer");
+        return;
+    }
+    
+    esp_now_register_recv_cb(OnDataRecv);
+    pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+    if (Serial.available()) {
+        String input = Serial.readStringUntil('\n');
+        input.trim();
+        if (input == "ON" || input == "OFF") {
+            sendMessage(input);
+        }
+    }
+}
 
