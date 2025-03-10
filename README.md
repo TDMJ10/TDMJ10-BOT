@@ -1,5 +1,3 @@
-![Battery-Holder-3x18650](https://github.com/user-attachments/assets/a7b73ec0-2dc9-4351-bba9-dbdd9aa07e4e)
-
 # Made with love (and pain) by
 
 Al Faridul Karim - CAMERA MODEL TRAINING & SLAVE ESP32 CODE
